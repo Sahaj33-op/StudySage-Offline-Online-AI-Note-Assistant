@@ -2,79 +2,62 @@ import random
 import nltk
 from nltk.tokenize import sent_tokenize, word_tokenize
 from nltk.corpus import stopwords
-from nltk.tag import pos_tag
 
 def generate_questions(summary, num_questions=3):
-    try:
-        # Tokenize the summary into sentences
-        sentences = sent_tokenize(summary)
-        if not sentences:
-            print("Quiz generation failed: No sentences found in the summary.")
-            return []
-
-        # Build a global pool of potential distractors
-        all_words = []
-        for sentence in sentences:
-            words = word_tokenize(sentence)
-            all_words.extend(words)
-        tagged_words = pos_tag(all_words)
-        stop_words = set(stopwords.words('english'))
-
-        # Collect all potential distractors (unique words)
-        potential_distractors = list(set(
-            word for word, tag in tagged_words
-            if tag.startswith(('NN', 'VB', 'JJ')) and word.lower() not in stop_words and len(word) > 3
-        ))
-
-        questions = []
-        attempts = 0
-        max_attempts = num_questions * 10  # Increased attempts to ensure we generate something
-
-        while len(questions) < num_questions and attempts < max_attempts:
-            # Choose a sentence to base the question on
-            sentence = random.choice(sentences)
-            words = word_tokenize(sentence)
-            tagged_words = pos_tag(words)
-
-            # Find potential answers in the chosen sentence
-            potential_answers = [
-                word for word, tag in tagged_words
-                if tag.startswith(('NN', 'VB', 'JJ')) and word.lower() not in stop_words and len(word) > 3
-            ]
-
-            if not potential_answers:
-                attempts += 1
-                continue
-
-            # Choose an answer
-            answer = random.choice(potential_answers)
-            question = sentence.replace(answer, "_____")
-
-            # Select distractors from the global pool, excluding the answer
-            available_distractors = [word for word in potential_distractors if word != answer]
-            if not available_distractors:  # Need at least 1 distractor
-                attempts += 1
-                continue
-
-            # Aim for 3 distractors, but accept as few as 1
-            num_distractors = min(3, len(available_distractors))
-            distractors = random.sample(available_distractors, num_distractors)
-
-            questions.append({
-                "question": question,
-                "answer": answer,
-                "options": [answer] + distractors
-            })
-
-            attempts += 1
-
-        if not questions:
-            print("Quiz generation failed: Could not generate any questions within the allowed attempts.")
-        elif len(questions) < num_questions:
-            print(f"Generated only {len(questions)} out of {num_questions} requested questions due to limited content.")
-        
-        return questions
-
-    except Exception as e:
-        print(f"Error generating quiz questions: {str(e)}")
+    print("[+] Generating questions from summary...")
+    
+    # Tokenize the summary into sentences
+    sentences = sent_tokenize(summary)
+    if not sentences:
+        print("Quiz generation failed: No sentences found in the summary.")
         return []
+
+    # Select up to num_questions sentences
+    selected_sentences = random.sample(sentences, min(num_questions, len(sentences)))
+    
+    # Build a global pool of potential distractors
+    all_words = []
+    for sentence in sentences:
+        words = word_tokenize(sentence)
+        all_words.extend(words)
+    stop_words = set(stopwords.words('english'))
+    potential_distractors = list(set(
+        word for word in all_words
+        if word.isalpha() and word.lower() not in stop_words and len(word) > 2
+    ))
+
+    questions = []
+    for i, sentence in enumerate(selected_sentences):
+        words = word_tokenize(sentence)
+        keywords = [word for word in words if word.isalpha() and word.lower() not in stop_words and len(word) > 2]
+
+        if not keywords:
+            print(f"Skipping sentence {i+1}: No keywords found.")
+            continue
+
+        # Choose an answer
+        answer = random.choice(keywords)
+        question = sentence.replace(answer, "_____")
+
+        # Select distractors from the global pool
+        available_distractors = [word for word in potential_distractors if word != answer]
+        num_distractors = min(3, len(available_distractors)) if available_distractors else 0
+        distractors = random.sample(available_distractors, num_distractors) if num_distractors > 0 else []
+
+        # Require at least 1 distractor to create a multiple-choice question
+        if num_distractors < 1:
+            print(f"Skipping question {i+1}: Not enough distractors available.")
+            continue
+
+        questions.append({
+            "question": f"Q{i+1}. {question}",
+            "answer": answer,
+            "options": [answer] + distractors
+        })
+
+    if not questions:
+        print("Quiz generation failed: Could not generate any questions with sufficient distractors.")
+    elif len(questions) < num_questions:
+        print(f"Generated only {len(questions)} out of {num_questions} requested questions due to limited keywords or distractors.")
+    
+    return questions
