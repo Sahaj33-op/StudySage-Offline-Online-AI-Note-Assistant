@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 from transformers import pipeline
 from pathlib import Path
 from datetime import datetime
@@ -88,4 +87,3 @@ def main():
 
 if __name__ == "__main__":
     main()
->>>>>>> 466d9410b23ea12dced9bc15ca58d72f3affe172
