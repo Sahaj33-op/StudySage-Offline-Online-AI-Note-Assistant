@@ -15,12 +15,9 @@
 
 > AI-powered summary & quiz generator with OCR, PDF export, offline/online modes, and Streamlit/GUI/CLI support.
 
-<a href="https://studysage-sahaj33.streamlit.app/" target="blank">
+<p><a href="https://studysage-sahaj33.streamlit.app/" target="blank">
     <img src="https://img.shields.io/badge/Deployed%20on-Streamlit-ff4b4b?logo=streamlit" alt="Streamlit Deploy">
-  
-[![Python](https://img.shields.io/badge/Python-3.10+-blue)](https://www.python.org/)
-[![Offline AI](https://img.shields.io/badge/Offline%20AI-Yes-green)]()
-[![MIT License](https://img.shields.io/badge/License-MIT-brightgreen)](LICENSE)
+  [![Python](https://img.shields.io/badge/Python-3.10+-blue)](https://www.python.org/) [![Offline AI](https://img.shields.io/badge/Offline%20AI-Yes-green)]() [![MIT License](https://img.shields.io/badge/License-MIT-brightgreen)](LICENSE)</p>
 
 <p align="center">
   <a href="https://github.com/Sahaj33-op/StudySage-Offline-AI-Note-Assistant?tab=readme-ov-file#-key-features">✨ Key Features</a> •
