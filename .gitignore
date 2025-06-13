@@ -2,8 +2,6 @@
 # Output directory for generated files (PDFs, temporary images, text files)
 output/
 
-# Model directory for downloaded AI models
-models/
 
 # Python cache files
 __pycache__/
@@ -36,7 +34,6 @@ build/
 dist/
 =======
 __pycache__/
-output/
 *.pyc
 *.pyo
 *.pyd
