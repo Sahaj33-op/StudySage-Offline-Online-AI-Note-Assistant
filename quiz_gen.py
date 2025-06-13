@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 import random
 import nltk
 from nltk.tokenize import sent_tokenize, word_tokenize
@@ -101,4 +100,3 @@ def generate_questions(summary, num_questions=3):
         })
 
     return questions
->>>>>>> 466d9410b23ea12dced9bc15ca58d72f3affe172
