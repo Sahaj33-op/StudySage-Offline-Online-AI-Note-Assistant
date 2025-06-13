@@ -12,12 +12,7 @@ def generate_questions(summary, num_questions=3):
             print("Quiz generation failed: No sentences found in the summary.")
             return []
 
-        # Check for minimum content
-        if len(sentences) < 2:
-            print("Quiz generation failed: Summary has fewer than 2 sentences.")
-            return []
-
-        # Tokenize all words in the summary to build a pool of potential distractors
+        # Build a global pool of potential distractors
         all_words = []
         for sentence in sentences:
             words = word_tokenize(sentence)
@@ -25,19 +20,15 @@ def generate_questions(summary, num_questions=3):
         tagged_words = pos_tag(all_words)
         stop_words = set(stopwords.words('english'))
 
-        # Collect all potential distractors from the entire summary
-        potential_distractors = [
+        # Collect all potential distractors (unique words)
+        potential_distractors = list(set(
             word for word, tag in tagged_words
             if tag.startswith(('NN', 'VB', 'JJ')) and word.lower() not in stop_words and len(word) > 3
-        ]
-
-        if len(potential_distractors) < 3:
-            print("Quiz generation failed: Not enough unique words to create distractors.")
-            return []
+        ))
 
         questions = []
         attempts = 0
-        max_attempts = num_questions * 5  # Increased attempts to allow more tries
+        max_attempts = num_questions * 10  # Increased attempts to ensure we generate something
 
         while len(questions) < num_questions and attempts < max_attempts:
             # Choose a sentence to base the question on
@@ -59,13 +50,13 @@ def generate_questions(summary, num_questions=3):
             answer = random.choice(potential_answers)
             question = sentence.replace(answer, "_____")
 
-            # Select distractors from the entire summary's word pool
+            # Select distractors from the global pool, excluding the answer
             available_distractors = [word for word in potential_distractors if word != answer]
-            if len(available_distractors) < 2:  # Reduced requirement to 2 distractors
+            if not available_distractors:  # Need at least 1 distractor
                 attempts += 1
                 continue
 
-            # Sample distractors (aim for 3, but accept 2 if that's all we have)
+            # Aim for 3 distractors, but accept as few as 1
             num_distractors = min(3, len(available_distractors))
             distractors = random.sample(available_distractors, num_distractors)
 
@@ -79,6 +70,8 @@ def generate_questions(summary, num_questions=3):
 
         if not questions:
             print("Quiz generation failed: Could not generate any questions within the allowed attempts.")
+        elif len(questions) < num_questions:
+            print(f"Generated only {len(questions)} out of {num_questions} requested questions due to limited content.")
         
         return questions
 
