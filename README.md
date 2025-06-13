@@ -15,6 +15,8 @@
 
 > AI-powered summary & quiz generator with OCR, PDF export, offline/online modes, and Streamlit/GUI/CLI support.
 
+
+
 <p>
   <a href="https://studysage-sahaj33.streamlit.app/" target="blank">
     <img src="https://img.shields.io/badge/Deployed%20on-Streamlit-ff4b4b?logo=streamlit" alt="Streamlit Deploy">
