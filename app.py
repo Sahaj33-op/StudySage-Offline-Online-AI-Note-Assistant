@@ -133,6 +133,14 @@ def main():
                             st.session_state.file_processed = True
                             st.session_state.scroll_to_summary = True
                             
+                            # Warn if summary is shorter than expected
+                            summary_words = len(nltk.word_tokenize(summary))
+                            if summary_words < min_length:
+                                st.warning(
+                                    f"Generated summary is shorter than the minimum length ({summary_words} words < {min_length} words). "
+                                    "The input document may be too short. Consider uploading a longer document or adjusting the summary length settings."
+                                )
+
                             if generate_quiz:
                                 # Check summary length for quiz generation
                                 sentences = nltk.sent_tokenize(summary)
@@ -149,12 +157,17 @@ def main():
                                     if not questions:
                                         st.warning(
                                             "Failed to generate quiz questions. "
-                                            "The summary may lack sufficient content (e.g., not enough unique words or sentences). "
+                                            "The summary may lack sufficient unique words or varied sentences. "
                                             "Try increasing the summary length or uploading a more detailed document."
                                         )
                                         st.session_state.questions = None
                                     else:
                                         st.session_state.questions = questions
+                                        if len(questions) < num_questions:
+                                            st.info(
+                                                f"Generated only {len(questions)} out of {num_questions} requested questions "
+                                                "due to limited content in the summary."
+                                            )
                             else:
                                 st.session_state.questions = None
                         
