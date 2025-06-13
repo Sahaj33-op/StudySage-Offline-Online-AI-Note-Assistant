@@ -10,3 +10,4 @@ colorama
 pyfiglet
 requests
 customtkinter
+pypdf2
