@@ -134,12 +134,27 @@ def main():
                             st.session_state.scroll_to_summary = True
                             
                             if generate_quiz:
-                                questions = generate_questions(summary, num_questions)
-                                if not questions:
-                                    st.warning("Failed to generate quiz questions. This may be due to insufficient content or an issue with the quiz generation process.")
+                                # Check summary length for quiz generation
+                                sentences = nltk.sent_tokenize(summary)
+                                words = nltk.word_tokenize(summary)
+                                if len(sentences) < 2 or len(words) < 20:
+                                    st.warning(
+                                        "Cannot generate quiz questions: Summary is too short "
+                                        f"({len(sentences)} sentences, {len(words)} words). "
+                                        "Please upload a longer document or increase the summary length."
+                                    )
                                     st.session_state.questions = None
                                 else:
-                                    st.session_state.questions = questions
+                                    questions = generate_questions(summary, num_questions)
+                                    if not questions:
+                                        st.warning(
+                                            "Failed to generate quiz questions. "
+                                            "The summary may lack sufficient content (e.g., not enough unique words or sentences). "
+                                            "Try increasing the summary length or uploading a more detailed document."
+                                        )
+                                        st.session_state.questions = None
+                                    else:
+                                        st.session_state.questions = questions
                             else:
                                 st.session_state.questions = None
                         
