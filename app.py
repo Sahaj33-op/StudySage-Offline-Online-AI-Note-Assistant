@@ -135,7 +135,11 @@ def main():
                             
                             if generate_quiz:
                                 questions = generate_questions(summary, num_questions)
-                                st.session_state.questions = questions
+                                if not questions:
+                                    st.warning("Failed to generate quiz questions. This may be due to insufficient content or an issue with the quiz generation process.")
+                                    st.session_state.questions = None
+                                else:
+                                    st.session_state.questions = questions
                             else:
                                 st.session_state.questions = None
                         
