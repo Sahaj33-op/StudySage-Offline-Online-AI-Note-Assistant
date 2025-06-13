@@ -83,42 +83,46 @@ def main():
         
         # Process the file
         if st.button("Process File"):
-            with st.spinner("Processing..."):
-                try:
-                    # Process the file with the selected OCR language
-                    summary = process_file(
-                        file_path,
-                        mode="online",
-                        api_key=st.session_state.api_key,
-                        min_length=min_length,
-                        max_length=max_length
-                    )
-                    
-                    # Check if the result is the "no text" message
-                    if summary.startswith("No text could be extracted"):
-                        st.warning(summary)
-                        st.session_state.file_processed = False
-                        st.session_state.summary = None
-                        st.session_state.questions = None
-                        st.session_state.scroll_to_summary = False
-                    else:
-                        # Store results in session state
-                        st.session_state.summary = summary
-                        st.session_state.file_processed = True
-                        st.session_state.scroll_to_summary = True
+            if not st.session_state.api_key:
+                st.error("Please enter a valid Hugging Face API key to proceed.")
+            else:
+                with st.spinner("Processing..."):
+                    try:
+                        # Process the file with the selected OCR language
+                        summary = process_file(
+                            file_path,
+                            mode="online",
+                            api_key=st.session_state.api_key,
+                            min_length=min_length,
+                            max_length=max_length,
+                            lang=ocr_lang
+                        )
                         
-                        if generate_quiz:
-                            questions = generate_questions(summary, num_questions)
-                            st.session_state.questions = questions
-                        else:
+                        # Check if the result is the "no text" message
+                        if summary.startswith("No text could be extracted"):
+                            st.warning(summary)
+                            st.session_state.file_processed = False
+                            st.session_state.summary = None
                             st.session_state.questions = None
-                    
-                except Exception as e:
-                    st.error(f"Error processing file: {str(e)}")
-                finally:
-                    # Clean up the uploaded file
-                    if os.path.exists(file_path):
-                        os.remove(file_path)
+                            st.session_state.scroll_to_summary = False
+                        else:
+                            # Store results in session state
+                            st.session_state.summary = summary
+                            st.session_state.file_processed = True
+                            st.session_state.scroll_to_summary = True
+                            
+                            if generate_quiz:
+                                questions = generate_questions(summary, num_questions)
+                                st.session_state.questions = questions
+                            else:
+                                st.session_state.questions = None
+                        
+                    except Exception as e:
+                        st.error(f"Error processing file: {str(e)}")
+                    finally:
+                        # Clean up the uploaded file
+                        if os.path.exists(file_path):
+                            os.remove(file_path)
 
     # Display results if file has been processed
     if st.session_state.file_processed and st.session_state.summary:
