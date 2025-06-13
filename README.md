@@ -17,6 +17,7 @@
 
 <a href="https://studysage-sahaj33.streamlit.app/" target="blank">
     <img src="https://img.shields.io/badge/Deployed%20on-Streamlit-ff4b4b?logo=streamlit" alt="Streamlit Deploy">
+  
 [![Python](https://img.shields.io/badge/Python-3.10+-blue)](https://www.python.org/)
 [![Offline AI](https://img.shields.io/badge/Offline%20AI-Yes-green)]()
 [![MIT License](https://img.shields.io/badge/License-MIT-brightgreen)](LICENSE)
