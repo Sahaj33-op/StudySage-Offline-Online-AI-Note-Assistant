@@ -198,4 +198,3 @@ def export_summary_to_pdf(summary_text, output_path="summary_output.pdf"):
     pdf.multi_cell(0, 10, summary_text)
     pdf.output(output_path)
     print(f"📄 PDF exported to: {output_path}")
->>>>>>> 466d9410b23ea12dced9bc15ca58d72f3affe172
