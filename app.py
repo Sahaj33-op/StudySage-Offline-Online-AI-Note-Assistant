@@ -66,6 +66,15 @@ def main():
             min_length = st.number_input("Minimum summary length (words)", min_value=10, max_value=500, value=50)
             max_length = st.number_input("Maximum summary length (words)", min_value=50, max_value=1000, value=200)
         
+        # OCR language selection
+        with col2:
+            ocr_lang = st.selectbox(
+                "Select OCR language (for PDFs and images)",
+                ["eng", "hin", "fra", "spa", "deu"],
+                index=0,
+                help="Choose the language of the text in your file for better OCR accuracy."
+            )
+        
         # Quiz options
         generate_quiz = st.checkbox("Generate quiz questions", value=False)
         num_questions = None
@@ -76,7 +85,7 @@ def main():
         if st.button("Process File"):
             with st.spinner("Processing..."):
                 try:
-                    # Process the file
+                    # Process the file with the selected OCR language
                     summary = process_file(
                         file_path,
                         mode="online",
@@ -85,19 +94,31 @@ def main():
                         max_length=max_length
                     )
                     
-                    # Store results in session state
-                    st.session_state.summary = summary
-                    st.session_state.file_processed = True
-                    st.session_state.scroll_to_summary = True
-                    
-                    if generate_quiz:
-                        questions = generate_questions(summary, num_questions)
-                        st.session_state.questions = questions
-                    else:
+                    # Check if the result is the "no text" message
+                    if summary.startswith("No text could be extracted"):
+                        st.warning(summary)
+                        st.session_state.file_processed = False
+                        st.session_state.summary = None
                         st.session_state.questions = None
+                        st.session_state.scroll_to_summary = False
+                    else:
+                        # Store results in session state
+                        st.session_state.summary = summary
+                        st.session_state.file_processed = True
+                        st.session_state.scroll_to_summary = True
+                        
+                        if generate_quiz:
+                            questions = generate_questions(summary, num_questions)
+                            st.session_state.questions = questions
+                        else:
+                            st.session_state.questions = None
                     
                 except Exception as e:
                     st.error(f"Error processing file: {str(e)}")
+                finally:
+                    # Clean up the uploaded file
+                    if os.path.exists(file_path):
+                        os.remove(file_path)
 
     # Display results if file has been processed
     if st.session_state.file_processed and st.session_state.summary:
