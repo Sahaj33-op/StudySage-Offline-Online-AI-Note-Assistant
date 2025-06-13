@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 from PIL import Image
 import pytesseract
 import os
@@ -46,4 +45,3 @@ def extract_text_from_image(image_path, lang='eng'):
         return text
     except Exception as e:
         return None
->>>>>>> 466d9410b23ea12dced9bc15ca58d72f3affe172
