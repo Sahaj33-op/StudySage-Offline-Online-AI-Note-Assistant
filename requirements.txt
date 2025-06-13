@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 streamlit
 transformers
 torch
@@ -11,15 +10,3 @@ colorama
 pyfiglet
 requests
 customtkinter
-=======
-transformers
-torch
-nltk
-pyfiglet
-colorama
-fpdf
-fpdf2
-pillow
-pytesseract
-tesseract
->>>>>>> 466d9410b23ea12dced9bc15ca58d72f3affe172
