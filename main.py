@@ -327,9 +327,9 @@ def setup_mode():
         else:
             print(Fore.RED + "❌ Invalid choice.")
 
-def process_file(file_path, mode="online", api_key=None, min_length=30, max_length=200):
+def process_file(file_path, mode="online", api_key=None, min_length=30, max_length=200, lang='eng'):
     config = {"mode": mode, "api_key": api_key or ""}
-    text = load_text_from_file(file_path)
+    text = load_text_from_file(file_path, lang=lang)
     if not text:
         return "No text could be extracted from the file. The file may be empty, contain no recognizable text, or OCR may have failed."
     summary = summarize_text(text, min_length, max_length, config, cli_mode=False)
