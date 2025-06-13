@@ -49,10 +49,10 @@ def export_summary_to_pdf(summary):
     content = []
     
     # Add logo if exists
-    logo_path = "logo.png"
+    logo_path = "logo-black.png"
     if os.path.exists(logo_path):
         try:
-            img = Image(logo_path, width=2*inch, height=2*inch)
+            img = Image(logo_path, width=1*inch, height=1*inch)
             content.append(img)
             content.append(Spacer(1, 20))
         except Exception as e:
@@ -147,10 +147,10 @@ def export_quiz_to_pdf(questions):
     content = []
     
     # Add logo if exists
-    logo_path = "logo.png"
+    logo_path = "logo-black.png"
     if os.path.exists(logo_path):
         try:
-            img = Image(logo_path, width=2*inch, height=2*inch)
+            img = Image(logo_path, width=1*inch, height=1*inch)
             content.append(img)
             content.append(Spacer(1, 20))
         except Exception as e:
