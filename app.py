@@ -19,8 +19,6 @@ def download_nltk_data():
         # Check if the resources are already downloaded
         if not os.path.exists(os.path.join(nltk_data_path, "tokenizers", "punkt_tab")):
             nltk.download("punkt_tab", download_dir=nltk_data_path)
-        if not os.path.exists(os.path.join(nltk_data_path, "taggers", "averaged_perceptron_tagger")):
-            nltk.download("averaged_perceptron_tagger", download_dir=nltk_data_path)
         if not os.path.exists(os.path.join(nltk_data_path, "corpora", "stopwords")):
             nltk.download("stopwords", download_dir=nltk_data_path)
     except Exception as e:
@@ -145,7 +143,7 @@ def main():
                                 # Check summary length for quiz generation
                                 sentences = nltk.sent_tokenize(summary)
                                 words = nltk.word_tokenize(summary)
-                                if len(sentences) < 2 or len(words) < 20:
+                                if len(sentences) < 1 or len(words) < 10:
                                     st.warning(
                                         "Cannot generate quiz questions: Summary is too short "
                                         f"({len(sentences)} sentences, {len(words)} words). "
@@ -157,7 +155,7 @@ def main():
                                     if not questions:
                                         st.warning(
                                             "Failed to generate quiz questions. "
-                                            "The summary may lack sufficient unique words or varied sentences. "
+                                            "The summary may lack sufficient keywords or varied sentences to create questions with distractors. "
                                             "Try increasing the summary length or uploading a more detailed document."
                                         )
                                         st.session_state.questions = None
@@ -166,7 +164,7 @@ def main():
                                         if len(questions) < num_questions:
                                             st.info(
                                                 f"Generated only {len(questions)} out of {num_questions} requested questions "
-                                                "due to limited content in the summary."
+                                                "due to limited keywords or distractors in the summary."
                                             )
                             else:
                                 st.session_state.questions = None
