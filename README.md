@@ -33,7 +33,6 @@
   <a href="https://github.com/Sahaj33-op/StudySage-Offline-AI-Note-Assistant?tab=readme-ov-file#-license">📜 License</a>
   <a href="https://github.com/Sahaj33-op/StudySage-Offline-AI-Note-Assistant?tab=readme-ov-file#-author">🙌 Author</a>
 </p>
----
 
 ## ✨ Key Features
 
