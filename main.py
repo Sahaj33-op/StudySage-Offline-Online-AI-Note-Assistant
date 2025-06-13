@@ -10,12 +10,16 @@ from datetime import datetime
 import requests
 import json
 import torch
-import PyPDF2
 import re
 import platform
 import sys
 from PIL import Image
 import fitz  # PyMuPDF
+import logging
+
+# Set up logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 OUTPUT_DIR = Path("output")
 MODELS_DIR = Path("models")
@@ -88,40 +92,58 @@ def load_text_from_file(file_path: str, lang: str = 'eng') -> str:
     _, ext = os.path.splitext(file_path)
     ext = ext.lower()
 
+    logger.info(f"Processing file: {file_path} (extension: {ext})")
+    
     try:
         if ext in ['.txt', '.md', '.py', '.json', '.csv']:
             with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
-                return f.read()
+                text = f.read()
+            logger.info(f"Text file extracted: {len(text)} characters")
+            return text
 
         elif ext == '.pdf':
             text = ""
-            with open(file_path, 'rb') as f:
-                reader = PyPDF2.PdfReader(f)
-                for page in reader.pages:
-                    page_text = page.extract_text()
-                    if page_text:
+            try:
+                doc = fitz.open(file_path)
+                logger.info(f"PDF opened with {len(doc)} pages")
+                for page_num in range(len(doc)):
+                    page = doc.load_page(page_num)
+                    # First, try to extract text directly
+                    page_text = page.get_text("text")
+                    if page_text.strip():
                         text += page_text + "\n"
-            if not text.strip():
-                try:
-                    doc = fitz.open(file_path)
-                    for page_num in range(len(doc)):
-                        page = doc.load_page(page_num)
+                        logger.info(f"Page {page_num + 1}: Extracted text directly ({len(page_text)} characters)")
+                    else:
+                        logger.info(f"Page {page_num + 1}: No text extracted directly, falling back to OCR")
+                        # Fallback to OCR if no text is extracted
                         pix = page.get_pixmap(dpi=300)
                         img_path = os.path.join("output", f"temp_page_{page_num}.png")
                         pix.save(img_path)
                         ocr_text = extract_text_from_image(img_path, lang)
-                        text += ocr_text + "\n"
+                        if ocr_text and ocr_text.strip():
+                            text += ocr_text + "\n"
+                            logger.info(f"Page {page_num + 1}: OCR extracted {len(ocr_text)} characters")
+                        else:
+                            logger.warning(f"Page {page_num + 1}: OCR extracted no text")
                         os.remove(img_path)
-                except Exception as ocr_e:
-                    print(Fore.RED + f"OCR failed: {ocr_e}")
-            return text.strip()
+                doc.close()
+            except Exception as e:
+                logger.error(f"Error extracting text from PDF: {str(e)}")
+                raise Exception(f"Error extracting text from PDF: {str(e)}")
+            final_text = text.strip()
+            logger.info(f"Final PDF text: {len(final_text)} characters")
+            return final_text
 
         elif ext in ['.png', '.jpg', '.jpeg', '.bmp', '.tiff']:
-            return extract_text_from_image(file_path, lang)
+            ocr_text = extract_text_from_image(file_path, lang)
+            logger.info(f"Image OCR extracted: {len(ocr_text)} characters")
+            return ocr_text
 
         else:
+            logger.error(f"Unsupported file format: {ext}")
             raise ValueError(f"Unsupported file format: {ext}")
     except Exception as e:
+        logger.error(f"Error loading file: {str(e)}")
         raise Exception(f"Error loading file: {str(e)}")
 
 def chunk_text(text, max_length=1024):
@@ -164,20 +186,25 @@ def check_text_limits(text, mode):
     
     return True, ""
 
-def summarize_text(text, min_len, max_len, config):
+def summarize_text(text, min_len, max_len, config, cli_mode=True):
     within_limits, limit_message = check_text_limits(text, config["mode"])
     if not within_limits:
         if config["mode"] == "online":
-            print(Fore.YELLOW + f"\n[!] {limit_message}")
-            print(Fore.YELLOW + "Switching to offline mode...")
+            if cli_mode:
+                print(Fore.YELLOW + f"\n[!] {limit_message}")
+                print(Fore.YELLOW + "Switching to offline mode...")
             config["mode"] = "offline"
             if not (MODELS_DIR / "distilbart-cnn-12-6").exists():
-                download_model()
+                if cli_mode:
+                    download_model()
+                else:
+                    raise ValueError("Offline model not available. Please download the model or use online mode.")
         else:
             raise ValueError(limit_message)
 
     if config["mode"] == "offline":
-        print(Fore.BLUE + "[+] Using offline model...")
+        if cli_mode:
+            print(Fore.BLUE + "[+] Using offline model...")
         model_path = get_model_path()
         summarizer = pipeline("summarization", model=str(model_path))
         chunks = chunk_text(text)
@@ -187,7 +214,8 @@ def summarize_text(text, min_len, max_len, config):
             summaries.append(summary[0]['summary_text'])
         return " ".join(summaries)
     else:
-        print(Fore.BLUE + "[+] Using online API...")
+        if cli_mode:
+            print(Fore.BLUE + "[+] Using online API...")
         if not config["api_key"]:
             raise ValueError("API key not set for online mode.")
         
@@ -303,8 +331,8 @@ def process_file(file_path, mode="online", api_key=None, min_length=30, max_leng
     config = {"mode": mode, "api_key": api_key or ""}
     text = load_text_from_file(file_path)
     if not text:
-        raise ValueError("No text extracted from file.")
-    summary = summarize_text(text, min_length, max_length, config)
+        return "No text could be extracted from the file. The file may be empty, contain no recognizable text, or OCR may have failed."
+    summary = summarize_text(text, min_length, max_length, config, cli_mode=False)
     return summary
 
 def main():
