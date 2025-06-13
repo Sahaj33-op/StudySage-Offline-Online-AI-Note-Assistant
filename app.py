@@ -1,11 +1,33 @@
 import streamlit as st
 import os
+import nltk
 from PIL import Image
 import requests
 from main import load_text_from_file, process_file
 from export_pdf import export_summary_to_pdf, export_quiz_to_pdf
 from quiz_gen import generate_questions
 import random
+
+# Set NLTK data path to a writable directory on Streamlit Cloud
+nltk_data_path = "/home/appuser/nltk_data"
+os.makedirs(nltk_data_path, exist_ok=True)
+nltk.data.path.append(nltk_data_path)
+
+# Download required NLTK data if not already present
+def download_nltk_data():
+    try:
+        # Check if the resources are already downloaded
+        if not os.path.exists(os.path.join(nltk_data_path, "tokenizers", "punkt_tab")):
+            nltk.download("punkt_tab", download_dir=nltk_data_path)
+        if not os.path.exists(os.path.join(nltk_data_path, "taggers", "averaged_perceptron_tagger")):
+            nltk.download("averaged_perceptron_tagger", download_dir=nltk_data_path)
+        if not os.path.exists(os.path.join(nltk_data_path, "corpora", "stopwords")):
+            nltk.download("stopwords", download_dir=nltk_data_path)
+    except Exception as e:
+        st.error(f"Failed to download NLTK data: {str(e)}. Quiz generation may not work.")
+
+# Download NLTK data at app startup
+download_nltk_data()
 
 def main():
     # Set page config
