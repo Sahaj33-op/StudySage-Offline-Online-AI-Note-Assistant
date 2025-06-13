@@ -1,170 +1,210 @@
-🧠 StudySage – AI Note Assistant
-StudySage is a versatile Python tool designed for students to summarize lecture notes and generate quizzes using AI, supporting both online and offline modes. It offers a command-line interface (CLI), a graphical user interface (GUI), and a web-based interface via Streamlit, making it accessible for various user preferences.
-✨ Features
+---
+
+## 🧠 StudySage – Offline & Online AI Note Assistant
+
+```text
+░██████╗██╗░░██╗██╗██╗░░░░░██╗░░░██╗░██████╗░░█████╗░░██████╗███████╗
+██╔════╝██║░░██║██║██║░░░░░██║░░░██║██╔════╝░██╔══██╗██╔════╝██╔════╝
+╚█████╗░███████║██║██║░░░░░██║░░░██║██║░░░░░░███████║██║░░░░░█████╗░░
+░╚═══██╗██╔══██║██║██║░░░░░██║░░░██║██║░░░░░░██╔══██║██║░░░░░██╔══╝░░
+██████╔╝██║░░██║██║███████╗╚██████╔╝╚██████╗░██║░░██║╚██████╗███████╗
+╚═════╝░╚═╝░░╚═╝╚═╝╚══════╝░╚═════╝░░╚═════╝░╚═╝░░╚═╝░╚═════╝╚══════╝
+```
 
-File Support: Processes .txt, .md, .pdf, .png, .jpg, and .jpeg files. Uses OCR for image files and PDFs with scanned content.
-Summarization: Generates concise summaries using the distilbart-cnn-12-6 model from Hugging Face, with customizable minimum and maximum word lengths.
-Quiz Generation: Creates multiple-choice questions based on the summary, with configurable question counts (1-20).
-Interfaces:
-CLI: Interactive terminal interface with minimal logs, user-controlled PDF exports, and a streamlined flow for summary and quiz generation.
-GUI: User-friendly desktop app built with customtkinter, supporting file loading, summarization, OCR, and PDF/text exports.
-Web: Streamlit-based interface with a modern design, auto-scroll to summaries, persistent data, and separate PDF download buttons.
+> AI-powered summary & quiz generator with OCR, PDF export, offline/online modes, and Streamlit/GUI/CLI support.
 
+[![Python](https://img.shields.io/badge/Python-3.10+-blue)](https://www.python.org/)
+[![Offline AI](https://img.shields.io/badge/Offline%20AI-Yes-green)]()
+[![MIT License](https://img.shields.io/badge/License-MIT-brightgreen)](LICENSE)
+
+---
 
-Modes:
-Online: Faster processing using Hugging Face API (requires API key).
-Offline: Local processing with no internet required (slower but lightweight).
+## ✨ Key Features
 
+| Feature                     | Description                                                    |
+| --------------------------- | -------------------------------------------------------------- |
+| 📝 Summary Generation       | Summarize text files, markdown, PDFs, or OCR'd images using AI |
+| 🧪 Quiz Question Generator  | Create MCQs from summaries with distractors                    |
+| 🖼 OCR from Images          | Extract text from `.jpg/.png` via Tesseract                    |
+| 📄 PDF Export (Manual)      | Export summary/quiz to PDF with user confirmation              |
+| 💾 Save to Text File        | Save generated content to `.txt`                               |
+| 🔄 Online & Offline Mode    | Choose between offline summarizer or Hugging Face API          |
+| 🌐 Streamlit Web UI         | Sleek, scrollable web interface with PDF download buttons      |
+| 🖥 Desktop GUI              | CustomTkinter GUI version for local use                        |
+| 🧪 Smart CLI Interface      | Modular feature selection, input flow control, minimal logs    |
+| 🧠 Hugging Face API Support | Uses `sshleifer/distilbart-cnn-12-6` offline or via token      |
 
-PDF Export: Exports summaries and quizzes to formatted PDFs with timestamps and optional logos, with user consent to prevent automatic saving.
-OCR: Extracts text from images and scanned PDFs using Tesseract OCR, with support for multiple languages.
-Cross-Platform: Compatible with Windows, macOS, and Linux.
+---
 
-🛠️ Recent Updates
+## 📂 Project Structure
 
-Streamlit Web Interface:
-Reliable auto-scroll to the "Generated Summary" section after processing files.
-Persistent summary and quiz data using session state, preventing data loss on PDF downloads.
-User-triggered PDF downloads instead of automatic saves.
+```
+StudySage/
+├── app.py                  # Streamlit Web UI
+├── main.py                 # CLI mode entry
+├── gui.py                  # Desktop GUI
+├── export_pdf.py           # PDF generation
+├── quiz_gen.py             # Quiz generator logic
+├── summarize_text.py       # Summary generator logic
+├── ocr_reader.py           # OCR image text reader
+├── requirements.txt        # Python dependencies
+├── README.md               # Project overview
+├── LICENSE                 # MIT License
+├── output/                 # (gitignored) Generated files
+├── assets/                 # Logo, banner, optional GUI images
+└── .gitignore              # Clean repo config
+```
 
+---
 
-CLI Improvements:
-Streamlined flow: After generating a summary, users are prompted to generate quizzes without re-entering file paths.
-Minimal logs for a cleaner interface.
-User-controlled PDF exports with confirmation prompts.
+## 🧠 Online vs Offline Mode
 
+| Mode    | Summary Engine                    | Quiz Engine | OCR | Requires Internet |
+| ------- | --------------------------------- | ----------- | --- | ----------------- |
+| Offline | Local model (DistilBART)          | Local NLTK  | Yes | ❌                 |
+| Online  | HuggingFace API (faster & better) | Local NLTK  | Yes | ✅ (API key)       |
 
-General Enhancements:
-Improved error handling across all interfaces.
-Consistent file handling for text, PDFs, and images with OCR support.
-Updated quiz generation logic for better question diversity.
+To use online mode, generate a Hugging Face token: [https://huggingface.co/settings/tokens](https://huggingface.co/settings/tokens)
 
+---
 
+## 🚀 Quickstart
 
-🔧 Setup
-Prerequisites
+### 🖥 CLI Mode
 
-Python 3.8 or higher
-Tesseract OCR installed (for image and PDF text extraction):
-Windows: Install from Tesseract at UB Mannheim and add to PATH.
-Linux: sudo apt-get install tesseract-ocr
-macOS: brew install tesseract
+```bash
+python main.py
+```
 
+* Choose Offline or Online
+* Enter note file (`.txt`, `.pdf`, `.md`, `.jpg`, `.png`)
+* Set summary word range (optional)
+* Generate summary
+* Prompt: Want to generate quiz? (y/n)
+* Prompt: Save summary/quiz as PDF? (y/n)
+* Output shown in clean format
 
-Optional: Hugging Face API key for online mode (get one from Hugging Face).
+---
 
-Installation
+### 🌐 Streamlit Web App
 
-Clone the repository:git clone https://github.com/Sahaj33-op/StudySage-Offline-AI-Note-Assistant.git
-cd StudySage-Offline-AI-Note-Assistant
+```bash
+streamlit run app.py
+```
 
+* Upload file
+* Choose features: Summary, Quiz
+* Customize summary range
+* Click **Process**
+* Auto-scrolls to output
+* Buttons to download PDF
 
-Install dependencies:pip install -r requirements.txt
+> 🧠 Supports session memory — doesn’t lose results after button clicks!
 
+---
 
-Ensure NLTK resources are downloaded (run once):import nltk
-nltk.download('punkt')
-nltk.download('averaged_perceptron_tagger')
-nltk.download('stopwords')
+### 🖼 GUI (CustomTkinter)
 
+```bash
+python gui.py
+```
 
+* Pick file with **Choose File**
+* Click buttons:
 
-Running the Application
+  * Generate Summary
+  * OCR (Image)
+  * Export PDF
+  * Save as .txt
 
-Command-Line Interface:python main.py
+---
 
+## ⚙️ Setup Instructions
 
-Choose online/offline mode, enter file paths, and select features (summary or quiz).
+### ✅ Prerequisites
 
+* Python 3.10+
+* pip
+* [Tesseract OCR](https://github.com/tesseract-ocr/tesseract)
 
-Graphical User Interface:python gui.py
+  * Windows: Add to PATH or set `tesseract_cmd` in code
+  * Linux: `sudo apt install tesseract-ocr`
+  * macOS: `brew install tesseract`
 
+---
 
-Use buttons to load files, generate summaries, perform OCR, and export results.
+### 🧪 Create a Virtual Environment (Optional but Recommended)
 
+```bash
+pip install virtualenv
+virtualenv venv
+source venv/bin/activate  # or venv\Scripts\activate on Windows
+```
 
-Streamlit Web Interface:streamlit run app.py
+---
 
+### 📦 Install Requirements
 
-Access via browser (typically http://localhost:8501), upload files, and interact with the web UI.
+```bash
+pip install -r requirements.txt
+```
 
+If using HuggingFace online mode, download tokenizer models on first use.
 
+---
 
-📦 Packaging as an Executable
-You can package StudySage into a standalone executable using PyInstaller, allowing users to run the CLI or GUI without installing Python or dependencies.
-Steps to Package
+## 📥 Packaging as Executable (.exe)
 
-Install PyInstaller:pip install pyinstaller
+You can package this into a standalone `.exe` for easy Windows sharing:
 
+```bash
+pip install pyinstaller
+pyinstaller --onefile --windowed main.py      # For CLI exe
+pyinstaller --onefile --windowed gui.py       # For GUI exe
+```
 
-Package the CLI (main.py):pyinstaller -F main.py
+> Result will appear in `/dist`. These are excluded from Git tracking via `.gitignore`.
 
+---
 
--F creates a single executable file.
-The executable will be in the dist/ folder (e.g., dist/main.exe on Windows).
+## 🔐 Clean GitHub Repo (.gitignore)
 
+Git ignores:
 
-Package the GUI (gui.py):pyinstaller -F gui.py
+* `output/` PDFs and temporary files
+* `models/`, `__pycache__/`, `.DS_Store`
+* PyInstaller build files (`build/`, `dist/`, `main.spec`)
+* `config.json` (contains sensitive keys)
 
+✅ Run:
 
-Ensure logo.png (if used) is in the same directory, or modify the .spec file to include it.
+```bash
+git add .
+git commit -m "Clean project, add new features"
+git push origin main
+```
 
+---
 
-Run the executable:
-Navigate to dist/ and run the generated file (e.g., ./main on Linux/macOS or main.exe on Windows).
+## 🧠 Credits
 
+* Hugging Face (`transformers`)
+* `sshleifer/distilbart-cnn-12-6` model
+* Streamlit
+* PyMuPDF, ReportLab, Pillow
+* Tesseract OCR
 
+---
 
-Notes
+## 📜 License
 
-Generated files (main.spec, build/, dist/, etc.) are excluded from Git via .gitignore to keep the repository clean.
-For better packaging, you can customize the .spec file (e.g., to include logo.png or Tesseract binaries) and rerun PyInstaller with pyinstaller main.spec.
+Licensed under the [MIT License](LICENSE)
 
-📂 Project Structure
+---
 
-.gitignore: Excludes generated files, models, and sensitive data from version control.
-app.py: Streamlit web interface.
-main.py: CLI with summarization and quiz generation.
-gui.py: GUI using customtkinter.
-summarize_text.py: Core summarization logic.
-quiz_gen.py: Quiz question generation.
-export_pdf.py: PDF export for summaries and quizzes.
-ocr_reader.py: OCR for images and scanned PDFs.
-requirements.txt: Project dependencies.
-output/: Directory for generated PDFs and temporary files (excluded from Git).
-models/: Directory for offline AI models (excluded from Git).
-logo.png: Optional logo for PDF exports (add your own).
+## 🙌 Author
 
-📖 Usage
-CLI
+Made with ❤️ by **[Sahaj33](https://github.com/Sahaj33-op)**
+Let’s empower learning with AI!
 
-Select online (requires API key) or offline mode.
-Enter summary length preferences (e.g., 30,200 for min/max words).
-Provide a file path (.txt, .md, .pdf, .png, etc.).
-Choose to generate a summary or quiz, or change the file.
-After a summary, opt to generate a quiz without re-entering the file path.
-Confirm PDF exports when prompted.
-
-GUI
-
-Click "Choose File" to load a supported file.
-Use "Generate Summary" for summarization, "OCR" for images, or export results as PDF/text.
-View results in the textbox.
-
-Web
-
-Enter your Hugging Face API key (for online mode).
-Upload a file and set summary length or quiz options.
-Click "Process File" to generate results, which auto-scroll to the summary.
-Download PDFs using dedicated buttons.
-
-🤝 Contributing
-Contributions are welcome! Fork the repository, make changes, and submit a pull request. Report issues or suggest features via GitHub Issues.
-📜 License
-MIT License. See LICENSE for details.
-🙌 Acknowledgments
-
-Hugging Face for the distilbart-cnn-12-6 model.
-Tesseract OCR for text extraction.
-Streamlit and customtkinter for user interfaces.
-
+---
