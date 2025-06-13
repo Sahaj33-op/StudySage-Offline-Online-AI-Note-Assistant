@@ -94,6 +94,11 @@ To use online mode, generate a Hugging Face token: [https://huggingface.co/setti
 ### 🖥 CLI Mode
 
 ```bash
+git clone https://github.com/Sahaj33-op/StudySage-Offline-Online-AI-Note-Assistant
+cd StudySage-Offline-Online-AI-Note-Assistant
+```
+
+```bash
 python main.py
 ```
 
@@ -153,6 +158,11 @@ python gui.py
   * macOS: `brew install tesseract`
 
 ---
+
+```bash
+git clone https://github.com/Sahaj33-op/StudySage-Offline-Online-AI-Note-Assistant
+cd StudySage-Offline-Online-AI-Note-Assistant
+```
 
 ### 🧪 Create a Virtual Environment (Optional but Recommended)
 
