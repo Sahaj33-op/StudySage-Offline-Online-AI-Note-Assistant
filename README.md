@@ -22,6 +22,17 @@
 [![Offline AI](https://img.shields.io/badge/Offline%20AI-Yes-green)]()
 [![MIT License](https://img.shields.io/badge/License-MIT-brightgreen)](LICENSE)
 
+<p align="center">
+  <a href="https://github.com/Sahaj33-op/StudySage-Offline-AI-Note-Assistant?tab=readme-ov-file#-key-features">✨ Key Features</a> •
+  <a href="https://github.com/Sahaj33-op/StudySage-Offline-AI-Note-Assistant?tab=readme-ov-file#-project-structure">📂 Project Structure</a> •
+  <a href="https://github.com/Sahaj33-op/StudySage-Offline-AI-Note-Assistant?tab=readme-ov-file#-online-vs-offline-mode">🧠 Online vs Offline Mode</a> •
+  <a href="https://github.com/Sahaj33-op/StudySage-Offline-AI-Note-Assistant?tab=readme-ov-file#-quickstart">🚀 Quickstart</a> •
+  <a href="https://github.com/Sahaj33-op/StudySage-Offline-AI-Note-Assistant?tab=readme-ov-file#-gui-customtkinter">🖼 GUI (CustomTkinter)</a>
+  <a href="https://github.com/Sahaj33-op/StudySage-Offline-AI-Note-Assistant?tab=readme-ov-file#%EF%B8%8F-setup-instructions">⚙️ Setup Instructions</a>
+  <a href="https://github.com/Sahaj33-op/StudySage-Offline-AI-Note-Assistant?tab=readme-ov-file#-credits">🧠 Credits</a>
+  <a href="https://github.com/Sahaj33-op/StudySage-Offline-AI-Note-Assistant?tab=readme-ov-file#-license">📜 License</a>
+  <a href="https://github.com/Sahaj33-op/StudySage-Offline-AI-Note-Assistant?tab=readme-ov-file#-author">🙌 Author</a>
+</p>
 ---
 
 ## ✨ Key Features
