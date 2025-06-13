@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 import os
 from transformers import pipeline, AutoTokenizer, AutoModelForSeq2SeqLM
 from pathlib import Path
@@ -540,4 +539,3 @@ def main():
 
 if __name__ == "__main__":
     main()
->>>>>>> 466d9410b23ea12dced9bc15ca58d72f3affe172
