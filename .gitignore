@@ -1,3 +1,40 @@
+<<<<<<< HEAD
+# Output directory for generated files (PDFs, temporary images, text files)
+output/
+
+# Model directory for downloaded AI models
+models/
+
+# Python cache files
+__pycache__/
+*.pyc
+
+# Virtual environment directories
+venv/
+.venv/
+env/
+
+# IDE/Editor specific files
+.vscode/
+.idea/
+
+# System-specific files
+.DS_Store
+Thumbs.db
+
+# Configuration file that may contain sensitive data (e.g., API keys)
+config.json
+
+# Temporary files
+*.log
+*.tmp
+
+# PyInstaller generated files
+main.spec
+core/
+build/
+dist/
+=======
 __pycache__/
 output/
 *.pyc
@@ -9,3 +46,4 @@ dist/
 build/
 .env
 *.exe
+>>>>>>> 466d9410b23ea12dced9bc15ca58d72f3affe172

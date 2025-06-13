@@ -1,3 +1,17 @@
+<<<<<<< HEAD
+streamlit
+transformers
+torch
+pytesseract
+Pillow
+pymupdf
+reportlab
+nltk
+colorama
+pyfiglet
+requests
+customtkinter
+=======
 transformers
 torch
 nltk
@@ -8,3 +22,4 @@ fpdf2
 pillow
 pytesseract
 tesseract
+>>>>>>> 466d9410b23ea12dced9bc15ca58d72f3affe172
