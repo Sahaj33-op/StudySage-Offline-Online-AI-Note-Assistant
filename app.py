@@ -257,26 +257,14 @@ def main():
                         
     # Footer
     st.markdown("""
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
-    <style>
-        .footer {
-            margin-top: 50px;
-            padding: 20px;
-            text-align: center;
-            border-top: 1px solid #eee;
-        }
-        .social-icons a {
-            margin: 0 10px;
-            color: #333;
-            font-size: 20px;
-        }
-    </style>
     <div class="footer">
         <div class="social-icons">
             <a href="https://github.com/Sahaj33-op/" target="_blank"><i class="fab fa-github"></i></a>
         </div>
-        <p>© 2025 StudySage. All rights reserved.</p>
-        <p><a href="https://linktr.ee/sahaj33" style="color: #333; text-decoration: none;">Contact Me</a></p>
+        <p>© 2025 SkillWise. All rights reserved.</p>
+        <p>
+            <a href="https://linktr.ee/sahaj33">Contact Me</a>
+        </p>
     </div>
     """, unsafe_allow_html=True)
 
