@@ -263,7 +263,6 @@ def main():
             margin-top: 50px;
             padding: 20px;
             text-align: center;
-            background: #f8f9fa;
             border-top: 1px solid #eee;
         }
         .social-icons a {
