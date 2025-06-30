@@ -260,14 +260,10 @@ def main():
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
     <style>
         .footer {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            padding: 10px;
+            margin-top: 50px;
+            padding: 20px;
             text-align: center;
             border-top: 1px solid #eee;
-            z-index: 100;
         }
         .social-icons a {
             margin: 0 10px;
