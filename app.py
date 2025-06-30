@@ -254,10 +254,6 @@ def main():
                             )
                     except Exception as e:
                         st.error(f"Error generating quiz PDF: {str(e)}")
-
-if __name__ == "__main__":
-    main()
-
 # Footer
 st.markdown("""
 <div class="footer">
@@ -270,3 +266,6 @@ st.markdown("""
     </p>
 </div>
 """, unsafe_allow_html=True)
+
+if __name__ == "__main__":
+    main()
