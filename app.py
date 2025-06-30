@@ -257,3 +257,16 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+# Footer
+st.markdown("""
+<div class="footer">
+    <div class="social-icons">
+        <a href="https://github.com/Sahaj33-op/" target="_blank"><i class="fab fa-github"></i></a>
+    </div>
+    <p>© 2025 SkillWise. All rights reserved.</p>
+    <p>
+        <a href="https://linktr.ee/sahaj33">Contact Me</a>
+    </p>
+</div>
+""", unsafe_allow_html=True)
