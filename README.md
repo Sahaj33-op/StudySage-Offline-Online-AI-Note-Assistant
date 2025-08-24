@@ -431,4 +431,3 @@ Permission is hereby granted, free of charge, to any person obtaining a copy...
 
 </div>
 
-[1](https://ppl-ai-file-upload.s3.amazonaws.com/web/direct-files/attachments/87031716/4c42774d-430f-4b77-b82a-9a4e907fb0d6/StudySage-GitToDoc.txt)
