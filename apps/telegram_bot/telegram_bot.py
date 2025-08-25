@@ -1,11 +1,17 @@
 # telegram_bot.py
 import sys
+from pathlib import Path
+
+# Make repo root importable before any core imports
+ROOT = Path(__file__).resolve().parents[2]
+if str(ROOT) not in sys.path:
+    sys.path.append(str(ROOT))
+
 import os
 import logging
 import tempfile
 import html
 import asyncio
-from pathlib import Path
 from dotenv import load_dotenv
 
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
@@ -14,14 +20,17 @@ from telegram.ext import (
     CallbackQueryHandler, ContextTypes, filters
 )
 
-sys.path.append(str(Path(__file__).resolve().parents[2]))
-
-# project modules
-from apps.cli.main import process_file, load_text_from_file, get_model_path
+# --- use shared core modules (do NOT import from apps/cli) ---
+from core.io import process_file, load_text_from_file
 from core.quiz_gen import generate_questions
 from core.export_pdf import export_summary_to_pdf, export_quiz_to_pdf
-from core.ocr_reader import extract_text_from_image
-from core.io import load_text_from_file
+
+# optional: prewarm offline model if available
+try:
+    from core.summarize import get_model_path  # if you exposed it from core
+except Exception:
+    get_model_path = None
+
 import json
 
 # load .env first (if present)
@@ -35,7 +44,8 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 CONFIG_FILE = "bot_config.json"
-OUTPUT_DIR = Path("bot_output")
+from pathlib import Path as _P
+OUTPUT_DIR = _P("bot_output")
 OUTPUT_DIR.mkdir(exist_ok=True)
 
 def _escape(s: str) -> str:
