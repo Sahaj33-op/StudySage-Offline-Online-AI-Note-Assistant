@@ -50,7 +50,7 @@ def main():
     # Create header with logo and text
     col1, col2 = st.columns([1, 2])
     with col1:
-        logo_path = "logo.png"
+        logo_path = "assets/images/logo.png"
         if os.path.exists(logo_path):
             st.image(logo_path, width=200, use_container_width=False)
         else:
@@ -282,3 +282,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
