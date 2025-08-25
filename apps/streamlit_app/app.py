@@ -3,7 +3,7 @@ import os
 import nltk
 from PIL import Image
 import requests
-from apps.cli.main import load_text_from_file, process_file
+from core.summarize import summarize_text
 from core.export_pdf import export_summary_to_pdf, export_quiz_to_pdf
 from core.quiz_gen import generate_questions
 from core.io import load_text_from_file
