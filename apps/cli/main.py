@@ -1,3 +1,11 @@
+import sys
+from pathlib import Path
+
+# Ensure repo root is on sys.path before core imports
+ROOT = Path(__file__).resolve().parents[2]
+if str(ROOT) not in sys.path:
+    sys.path.append(str(ROOT))
+
 import os
 from transformers import pipeline, AutoTokenizer, AutoModelForSeq2SeqLM
 from pathlib import Path
@@ -14,7 +22,6 @@ import json
 import torch
 import re
 import platform
-import sys
 from PIL import Image
 import fitz  # PyMuPDF
 import logging
@@ -27,6 +34,7 @@ OUTPUT_DIR = Path("output")
 MODELS_DIR = Path("models")
 OUTPUT_DIR.mkdir(exist_ok=True)
 MODELS_DIR.mkdir(exist_ok=True)
+
 
 # Constants for mode limits
 ONLINE_MODE_MAX_CHARS = 4000
