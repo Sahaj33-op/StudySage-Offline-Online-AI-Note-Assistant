@@ -1,18 +1,28 @@
+import sys
+from pathlib import Path
+
+# Ensure repo root is on sys.path before core imports
+ROOT = Path(__file__).resolve().parents[2]
+if str(ROOT) not in sys.path:
+    sys.path.append(str(ROOT))
+
 import streamlit as st
 import os
 import nltk
 from PIL import Image
 import requests
+import random
+
 from core.summarize import summarize_text
 from core.export_pdf import export_summary_to_pdf, export_quiz_to_pdf
 from core.quiz_gen import generate_questions
 from core.io import load_text_from_file
-import random
 
 # Set NLTK data path to a writable directory on Streamlit Cloud
 nltk_data_path = "/home/appuser/nltk_data"
 os.makedirs(nltk_data_path, exist_ok=True)
 nltk.data.path.append(nltk_data_path)
+
 
 # Download required NLTK data if not already present
 def download_nltk_data():
