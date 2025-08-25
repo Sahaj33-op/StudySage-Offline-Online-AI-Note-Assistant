@@ -137,6 +137,24 @@ streamlit run app.py
 - One-click PDF downloads
 - Session memory retention
 
+### 🤖 Telegram Bot
+
+**Telegram Bot:** https://t.me/StudySage33_bot
+
+**Run locally:**
+```bash
+cd telegram_bot
+pip install -r requirements_bot.txt
+python telegram_bot.py
+````
+
+**Bot Features:**
+- Summarization (offline & online HuggingFace)
+- Quiz generation
+- OCR (normal & aggressive)
+- PDF export
+
+
 ### 🖥️ Desktop GUI
 ```bash
 python gui.py
@@ -430,4 +448,5 @@ Permission is hereby granted, free of charge, to any person obtaining a copy...
 *Making AI-powered learning accessible to everyone* 🌟
 
 </div>
+
 
