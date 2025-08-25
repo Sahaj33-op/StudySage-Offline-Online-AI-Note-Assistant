@@ -67,7 +67,7 @@ class StudySageApp(ctk.CTk):
             messagebox.showwarning("⚠️ No text", "Please load a file or run OCR first.")
             return
         try:
-            summary = summarize_text(self.text_data, min_len=50, max_len=200, config={"mode": "offline"})
+            summary = summarize_text(self.text_data, min_length=50, max_length=200, config={"mode": "offline"})
             self.textbox.delete("0.0", "end")
             self.textbox.insert("0.0", summary)
             self.text_data = summary

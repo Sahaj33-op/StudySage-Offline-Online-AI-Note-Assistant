@@ -1,46 +1,171 @@
-from transformers import pipeline
+# core/summarize.py
+from __future__ import annotations
+import os
+import re
+import requests
 from pathlib import Path
-from datetime import datetime
-from colorama import Fore, init
+from typing import Callable, Optional, Dict, List
 
-init(autoreset=True)
-OUTPUT_DIR = Path("output")
-OUTPUT_DIR.mkdir(exist_ok=True)
+from transformers import pipeline, AutoTokenizer, AutoModelForSeq2SeqLM
 
-def load_text_from_file(file_path):
-    path = Path(file_path)
-    if not path.exists():
-        raise FileNotFoundError("File not found.")
-    return path.read_text(encoding='utf-8')
+# ---------- constants & dirs ----------
+MODELS_DIR = Path("models")
+MODELS_DIR.mkdir(exist_ok=True)
 
-def summarize_text(text, min_len=30, max_len=200):
-    print(Fore.BLUE + "[+] Loading summarization model (offline)...")
-    summarizer = pipeline("summarization", model="sshleifer/distilbart-cnn-12-6")
-    summary = summarizer(text, max_length=max_len, min_length=min_len, do_sample=False)
-    summary_text = summary[0]['summary_text']
+MODEL_NAME = "sshleifer/distilbart-cnn-12-6"
+LOCAL_MODEL_DIR = MODELS_DIR / "distilbart-cnn-12-6"
 
-    print(Fore.YELLOW + "\n📄 Summary:\n")
-    print(summary_text)
+# Soft limits (keep generous offline; tighter online)
+ONLINE_MODE_MAX_CHARS = 4000
+ONLINE_MODE_MAX_WORDS = 800
+OFFLINE_MODE_MAX_CHARS = 100000
+OFFLINE_MODE_MAX_WORDS = 20000
 
-    save = input(Fore.CYAN + "\n💾 Save summary to file? (y/n): ").strip().lower()
-    if save == 'y':
-        filename = OUTPUT_DIR / f"summary_{datetime.now().strftime('%Y%m%d_%H%M%S')}.txt"
-        with open(filename, 'w', encoding='utf-8') as f:
-            f.write(summary_text)
-        print(Fore.GREEN + f"✅ Saved to {filename}")
+Progress = Optional[Callable[[str, int, int], None]]
 
-    return summary_text
 
-def main():
-    print("🧠 Welcome to StudySage - Offline Note Summarizer")
-    file_path = input("Enter the path to your .txt or .md note file: ")
+# ---------- utilities ----------
+def _chunk_text(text: str, max_words: int = 600) -> List[str]:
+    """
+    Split text into chunks ~max_words using sentence boundaries when possible.
+    """
+    sentences = re.split(r"(?<=[.!?])\s+", text.strip())
+    chunks: List[str] = []
+    cur: List[str] = []
+    cur_words = 0
 
-    try:
-        text = load_text_from_file(file_path)
-        print("[✓] Text loaded. Summarizing...\n")
-        summarize_text(text)
-    except Exception as e:
-        print(f"Error: {e}")
+    for s in sentences:
+        w = len(s.split())
+        if cur and cur_words + w > max_words:
+            chunks.append(" ".join(cur))
+            cur, cur_words = [s], w
+        else:
+            cur.append(s)
+            cur_words += w
+    if cur:
+        chunks.append(" ".join(cur))
+    return chunks if chunks else [text.strip()]
 
-if __name__ == "__main__":
-    main()
+
+def _count_words(text: str) -> int:
+    return len(text.split())
+
+
+def _count_chars(text: str) -> int:
+    return len(text)
+
+
+def _within_limits(text: str, mode: str) -> (bool, str):
+    words, chars = _count_words(text), _count_chars(text)
+    if mode == "online":
+        if words > ONLINE_MODE_MAX_WORDS or chars > ONLINE_MODE_MAX_CHARS:
+            return False, f"Text exceeds online mode limits (max {ONLINE_MODE_MAX_WORDS} words or {ONLINE_MODE_MAX_CHARS} chars)."
+    else:
+        if words > OFFLINE_MODE_MAX_WORDS or chars > OFFLINE_MODE_MAX_CHARS:
+            return False, f"Text exceeds offline mode limits (max {OFFLINE_MODE_MAX_WORDS} words or {OFFLINE_MODE_MAX_CHARS} chars)."
+    return True, ""
+
+
+# ---------- model management ----------
+def download_model() -> Path:
+    """
+    Download the offline model locally so the pipeline can run without internet.
+    """
+    tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME)
+    model = AutoModelForSeq2SeqLM.from_pretrained(MODEL_NAME)
+    LOCAL_MODEL_DIR.mkdir(parents=True, exist_ok=True)
+    tokenizer.save_pretrained(LOCAL_MODEL_DIR)
+    model.save_pretrained(LOCAL_MODEL_DIR)
+    return LOCAL_MODEL_DIR
+
+
+def get_model_path() -> Path:
+    """
+    Return local model path, downloading if missing.
+    """
+    if not LOCAL_MODEL_DIR.exists():
+        return download_model()
+    return LOCAL_MODEL_DIR
+
+
+# ---------- main API ----------
+def summarize_text(
+    text: str,
+    min_length: int,
+    max_length: int,
+    config: Dict[str, str],
+    progress_callback: Progress = None,
+) -> str:
+    """
+    Summarize given text according to mode:
+      - offline: uses local Transformers pipeline, downloads model if missing
+      - online: uses Hugging Face Inference API (requires config['api_key'])
+
+    Arguments:
+      text: input text
+      min_length, max_length: summary token lengths (roughly)
+      config: {'mode': 'offline'|'online', 'api_key': optional}
+      progress_callback(stage: str, step: int, total: int): optional progress hook
+    """
+    mode = (config.get("mode") or "offline").lower()
+
+    ok, msg = _within_limits(text, mode)
+    if not ok:
+        # If online is too small, auto-fallback to offline (more permissive)
+        if mode == "online":
+            mode = "offline"
+            if progress_callback:
+                progress_callback("Switching to offline mode due to size limits", 0, 0)
+        else:
+            # Too large even for offline; caller should trim or chunk more aggressively
+            raise ValueError(msg)
+
+    # Chunk the text to keep each call within bounds and merge summaries
+    # Use smaller chunks online to respect tighter limits
+    chunk_words = 350 if mode == "online" else 800
+    chunks = _chunk_text(text, max_words=chunk_words)
+    summaries: List[str] = []
+    total = len(chunks)
+
+    if mode == "offline":
+        if progress_callback:
+            progress_callback("Preparing offline model", 0, total)
+        model_dir = get_model_path()
+        # device=-1 forces CPU; you can switch to device=0 for GPU if available
+        summarizer = pipeline("summarization", model=str(model_dir), device=-1)
+        for i, chunk in enumerate(chunks, 1):
+            if progress_callback:
+                progress_callback("Summarizing chunks (offline)", i, total)
+            out = summarizer(chunk, max_length=max_length, min_length=min_length, do_sample=False)
+            summaries.append(out[0]["summary_text"])
+    else:
+        # online via HF Inference API
+        api_key = (config.get("api_key") or "").strip()
+        if not api_key:
+            raise ValueError("API key not set for online mode.")
+        headers = {"Authorization": f"Bearer {api_key}"}
+        api_url = f"https://api-inference.huggingface.co/models/{MODEL_NAME}"
+
+        for i, chunk in enumerate(chunks, 1):
+            if progress_callback:
+                progress_callback("Contacting HF API (online)", i, total)
+            r = requests.post(
+                api_url,
+                headers=headers,
+                json={"inputs": chunk, "parameters": {"max_length": max_length, "min_length": min_length, "do_sample": False}},
+                timeout=60,
+            )
+            if r.status_code != 200:
+                raise RuntimeError(f"HF API error: {r.status_code} {r.text[:200]}")
+            data = r.json()
+            # Some HF hosts return a list of dicts [{'summary_text': ...}]
+            if isinstance(data, list) and data and "summary_text" in data[0]:
+                summaries.append(data[0]["summary_text"])
+            else:
+                # Fallback: try to parse other shapes or raise
+                raise RuntimeError(f"Unexpected HF response: {str(data)[:200]}")
+
+    final = " ".join(summaries).strip()
+    if progress_callback:
+        progress_callback("Summarization done", total, total)
+    return final
