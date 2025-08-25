@@ -1,0 +1,15 @@
+python-telegram-bot>=20.0
+python-dotenv
+opencv-python
+transformers
+torch
+pytesseract
+Pillow
+pymupdf
+reportlab
+nltk
+colorama
+pyfiglet
+requests
+PyPDF2
+langdetect

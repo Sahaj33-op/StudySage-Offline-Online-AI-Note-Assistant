@@ -1,0 +1,14 @@
+{
+    "bot_token": "",
+    "hf_api_key": "",
+    "default_mode": "offline",
+    "max_file_size": 20971520,
+    "supported_formats": [
+        ".pdf",
+        ".txt",
+        ".md",
+        ".png",
+        ".jpg",
+        ".jpeg"
+    ]
+}
