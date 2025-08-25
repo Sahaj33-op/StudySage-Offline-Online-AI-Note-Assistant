@@ -147,7 +147,7 @@ def export_quiz_to_pdf(questions):
     content = []
     
     # Add logo if exists
-    logo_path = "logo-black.png"
+    logo_path = "assets/images/logo-black.png"
     if os.path.exists(logo_path):
         try:
             img = Image(logo_path, width=2*inch, height=2*inch)
@@ -185,3 +185,4 @@ def export_quiz_to_pdf(questions):
     doc.build(content)
     print(f"📄 PDF exported to: {output_file}")
     return output_file
+
