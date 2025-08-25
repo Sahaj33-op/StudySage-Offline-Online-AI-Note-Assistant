@@ -16,7 +16,7 @@ import random
 from core.summarize import summarize_text
 from core.export_pdf import export_summary_to_pdf, export_quiz_to_pdf
 from core.quiz_gen import generate_questions
-from core.io import load_text_from_file
+from core.io import load_text_from_file, process_file
 
 # Set NLTK data path to a writable directory on Streamlit Cloud
 nltk_data_path = "/home/appuser/nltk_data"

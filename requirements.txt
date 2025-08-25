@@ -10,3 +10,5 @@ colorama
 pyfiglet
 requests
 customtkinter
+opencv-python
+langdetect

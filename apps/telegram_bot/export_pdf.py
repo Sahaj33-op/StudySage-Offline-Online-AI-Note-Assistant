@@ -61,7 +61,7 @@ def export_quiz_to_pdf(questions):
     answer_style = ParagraphStyle('AnswerStyle', parent=styles['Normal'], fontSize=12, spaceAfter=20, leading=16, leftIndent=20, textColor=colors.HexColor('#2E7D32'))
 
     content = []
-    logo_path = "logo.png"
+    logo_path = "assets/images/logo.png"
     if os.path.exists(logo_path):
         try:
             content.append(Image(logo_path, width=2*inch, height=2*inch))
