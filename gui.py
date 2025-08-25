@@ -3,9 +3,10 @@ from tkinter import filedialog, messagebox
 from pathlib import Path
 from datetime import datetime
 import os
-from main import summarize_text, load_text_from_file
-from ocr_reader import extract_text_from_image
-from export_pdf import export_summary_to_pdf
+from core.summarize import summarize_text, load_text_from_file
+from core.ocr_reader import extract_text_from_image
+from core.export_pdf import export_summary_to_pdf
+from core.io import load_text_from_file
 
 OUTPUT_DIR = Path("output")
 OUTPUT_DIR.mkdir(exist_ok=True)

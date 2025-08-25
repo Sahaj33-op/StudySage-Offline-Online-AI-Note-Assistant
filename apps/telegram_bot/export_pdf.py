@@ -21,7 +21,7 @@ def export_summary_to_pdf(summary):
     body_style = ParagraphStyle('CustomBody', parent=styles['Normal'], fontSize=12, spaceAfter=12, leading=16)
 
     content = []
-    logo_path = "logo.png"
+    logo_path = "assets/images/logo.png"
     if os.path.exists(logo_path):
         try:
             content.append(Image(logo_path, width=2*inch, height=2*inch))

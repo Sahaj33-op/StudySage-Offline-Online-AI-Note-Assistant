@@ -3,9 +3,10 @@ import os
 import nltk
 from PIL import Image
 import requests
-from main import load_text_from_file, process_file
-from export_pdf import export_summary_to_pdf, export_quiz_to_pdf
-from quiz_gen import generate_questions
+from apps.cli.main import load_text_from_file, process_file
+from core.export_pdf import export_summary_to_pdf, export_quiz_to_pdf
+from core.quiz_gen import generate_questions
+from core.io import load_text_from_file
 import random
 
 # Set NLTK data path to a writable directory on Streamlit Cloud
