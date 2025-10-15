@@ -5,6 +5,12 @@ import fitz  # PyMuPDF
 from typing import Callable, Optional
 from core.ocr_reader import extract_text_from_image
 
+# Import configuration
+try:
+    from config import OUTPUT_DIR
+except ImportError:
+    OUTPUT_DIR = "output"
+
 Progress = Optional[Callable[[str, int, int], None]]
 
 def load_text_from_file(file_path: str, lang: str = "auto", force_ocr: bool = False, progress_callback: Progress = None) -> str:
@@ -46,7 +52,7 @@ def _extract_pdf_text_or_ocr(pdf_path: Path, lang: str, force_ocr: bool, progres
     # 2) Forced/fallback OCR
     if progress_callback: progress_callback("OCR PDF pages", 0, len(doc))
     out = []
-    tmp_dir = Path("output"); tmp_dir.mkdir(exist_ok=True)
+    tmp_dir = Path(OUTPUT_DIR); tmp_dir.mkdir(exist_ok=True)
     for i in range(len(doc)):
         if progress_callback: progress_callback("OCR PDF pages", i + 1, len(doc))
         page = doc.load_page(i)

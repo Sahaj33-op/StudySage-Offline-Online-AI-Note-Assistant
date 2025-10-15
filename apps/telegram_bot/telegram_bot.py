@@ -36,6 +36,12 @@ import json
 # load .env first (if present)
 load_dotenv()
 
+# Import configuration
+try:
+    from config import OUTPUT_DIR
+except ImportError:
+    OUTPUT_DIR = "output"
+
 # Configure logging
 logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
@@ -45,8 +51,8 @@ logger = logging.getLogger(__name__)
 
 CONFIG_FILE = "bot_config.json"
 from pathlib import Path as _P
-OUTPUT_DIR = _P("bot_output")
-OUTPUT_DIR.mkdir(exist_ok=True)
+OUTPUT_DIR_PATH = _P(OUTPUT_DIR)
+OUTPUT_DIR_PATH.mkdir(exist_ok=True)
 
 def _escape(s: str) -> str:
     return html.escape(s or "")

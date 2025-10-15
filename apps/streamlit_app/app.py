@@ -1,296 +1,180 @@
-import sys
-from pathlib import Path
-
-# Ensure repo root is on sys.path before core imports
-ROOT = Path(__file__).resolve().parents[2]
-if str(ROOT) not in sys.path:
-    sys.path.append(str(ROOT))
-
 import streamlit as st
 import os
-import nltk
-from PIL import Image
-import requests
-import random
+import tempfile
+from pathlib import Path
 
-from core.summarize import summarize_text
-from core.export_pdf import export_summary_to_pdf, export_quiz_to_pdf
-from core.quiz_gen import generate_questions
+# Import configuration
+try:
+    from config import OUTPUT_DIR
+except ImportError:
+    OUTPUT_DIR = "output"
+
 from core.io import load_text_from_file, process_file
+from core.quiz_gen import generate_questions
+from core.export_pdf import export_summary_to_pdf, export_quiz_to_pdf
 
-# Set NLTK data path to a writable directory on Streamlit Cloud
-nltk_data_path = "/home/appuser/nltk_data"
-os.makedirs(nltk_data_path, exist_ok=True)
-nltk.data.path.append(nltk_data_path)
+# Initialize session state
+if 'api_key' not in st.session_state:
+    st.session_state.api_key = ""
+if 'summary' not in st.session_state:
+    st.session_state.summary = ""
+if 'questions' not in st.session_state:
+    st.session_state.questions = []
+if 'file_processed' not in st.session_state:
+    st.session_state.file_processed = False
+if 'scroll_to_summary' not in st.session_state:
+    st.session_state.scroll_to_summary = False
 
+# Create output directory
+OUTPUT_PATH = Path(OUTPUT_DIR)
+OUTPUT_PATH.mkdir(exist_ok=True)
 
-# Download required NLTK data if not already present
-def download_nltk_data():
-    try:
-        # Check if the resources are already downloaded
-        if not os.path.exists(os.path.join(nltk_data_path, "tokenizers", "punkt_tab")):
-            nltk.download("punkt_tab", download_dir=nltk_data_path)
-        if not os.path.exists(os.path.join(nltk_data_path, "corpora", "stopwords")):
-            nltk.download("stopwords", download_dir=nltk_data_path)
-    except Exception as e:
-        st.error(f"Failed to download NLTK data: {str(e)}. Quiz generation may not work.")
+# Create header with logo and text
+col1, col2 = st.columns([1, 2])
+with col1:
+    logo_path = "assets\\images\\logo.png"
+    if os.path.exists(logo_path):
+        st.image(logo_path, width=200, use_container_width=False)
+    else:
+        st.warning("Logo file not found.")
+with col2:
+    st.title("StudySage AI Note Assistant")
+    st.subheader("by Sahaj33")
+st.markdown("---")
 
-# Download NLTK data at app startup
-download_nltk_data()
+# API Key input
+api_key = st.text_input("Enter your Hugging Face API Key", value=st.session_state.api_key or "", type="password")
+if api_key != st.session_state.api_key:
+    st.session_state.api_key = api_key
+    st.rerun()
 
-def main():
-    # Set page config
-    st.set_page_config(
-        page_title="StudySage",
-        page_icon="📚",
-        layout="wide"
-    )
+# File upload
+uploaded_file = st.file_uploader("Upload your notes (PDF, TXT, PNG, JPG)", type=['pdf', 'txt', 'png', 'jpg', 'jpeg'])
 
-    # Initialize session state variables
-    if 'api_key' not in st.session_state:
-        st.session_state.api_key = None
-    if 'summary' not in st.session_state:
-        st.session_state.summary = None
-    if 'questions' not in st.session_state:
-        st.session_state.questions = None
-    if 'file_processed' not in st.session_state:
-        st.session_state.file_processed = False
-    if 'scroll_to_summary' not in st.session_state:
-        st.session_state.scroll_to_summary = False
-
-    # Create header with logo and text
-    col1, col2 = st.columns([1, 2])
-    with col1:
-        logo_path = "assets/images/logo.png"
-        if os.path.exists(logo_path):
-            st.image(logo_path, width=200, use_container_width=False)
-        else:
-            st.warning("Logo file not found.")
-    with col2:
-        st.title("StudySage AI Note Assistant")
-        st.subheader("by Sahaj33")
-    st.markdown("---")
-
-    # API Key input
-    api_key = st.text_input("Enter your Hugging Face API Key", value=st.session_state.api_key or "", type="password")
-    if api_key != st.session_state.api_key:
-        st.session_state.api_key = api_key
-        st.rerun()
-
-    # File upload
-    uploaded_file = st.file_uploader("Upload your notes (PDF, TXT, PNG, JPG)", type=['pdf', 'txt', 'png', 'jpg', 'jpeg'])
+if uploaded_file is not None:
+    # Save the uploaded file
+    file_path = os.path.join(OUTPUT_DIR, uploaded_file.name)
+    os.makedirs(OUTPUT_DIR, exist_ok=True)
     
-    if uploaded_file is not None:
-        # Save the uploaded file
-        file_path = os.path.join("output", uploaded_file.name)
-        os.makedirs("output", exist_ok=True)
+    with open(file_path, "wb") as f:
+        f.write(uploaded_file.getbuffer())
+    
+    # Processing options
+    st.markdown("### Processing Options")
+    
+    # Mode selection
+    mode = st.radio("Processing Mode", ["Offline (Private)", "Online (Requires API Key)"], index=0)
+    selected_mode = "offline" if mode == "Offline (Private)" else "online"
+    
+    # Summary length
+    st.markdown("#### Summary Length")
+    col1, col2 = st.columns(2)
+    with col1:
+        min_length = st.number_input("Min Length", min_value=10, max_value=100, value=30)
+    with col2:
+        max_length = st.number_input("Max Length", min_value=50, max_value=500, value=150)
+    
+    # Process button
+    if st.button("🧠 Process Document"):
+        try:
+            with st.spinner("Processing..."):
+                # Process the file
+                summary = process_file(
+                    file_path, 
+                    mode=selected_mode, 
+                    api_key=st.session_state.api_key if selected_mode == "online" else "",
+                    min_length=min_length,
+                    max_length=max_length
+                )
+                
+                st.session_state.summary = summary
+                st.session_state.file_processed = True
+                st.session_state.scroll_to_summary = True
+                
+                st.success("✅ Document processed successfully!")
+                
+        except Exception as e:
+            st.error(f"❌ Error processing document: {str(e)}")
+    
+    # Display results if processed
+    if st.session_state.file_processed:
+        st.markdown("---")
+        st.markdown("## 📝 Results")
         
-        with open(file_path, "wb") as f:
-            f.write(uploaded_file.getbuffer())
+        # Summary tab
+        summary_tab, quiz_tab = st.tabs(["Summary", "Quiz"])
         
-        # Processing options
-        st.subheader("Processing Options")
-        
-        # Summary length options
-        col1, col2 = st.columns(2)
-        with col1:
-            min_length = st.number_input("Minimum summary length (words)", min_value=10, max_value=500, value=50)
-            max_length = st.number_input("Maximum summary length (words)", min_value=50, max_value=1000, value=200)
-        
-        # OCR language selection
-        with col2:
-            ocr_lang = st.selectbox(
-                "Select OCR language (for PDFs and images)",
-                ["eng", "hin", "fra", "spa", "deu"],
-                index=0,
-                help="Choose the language of the text in your file for better OCR accuracy."
-            )
-        
-        # Quiz options
-        generate_quiz = st.checkbox("Generate quiz questions", value=False)
-        num_questions = None
-        if generate_quiz:
-            num_questions = st.number_input("Number of questions", min_value=1, max_value=20, value=5)
-        
-        # Process the file
-        if st.button("Process File"):
-            if not st.session_state.api_key:
-                st.error("Please enter a valid Hugging Face API key to proceed.")
-            else:
-                with st.spinner("Processing..."):
-                    try:
-                        # Process the file with the selected OCR language
-                        summary = process_file(
-                            file_path,
-                            mode="online",
-                            api_key=st.session_state.api_key,
-                            min_length=min_length,
-                            max_length=max_length,
-                            lang=ocr_lang
-                        )
-                        
-                        # Check if the result is the "no text" message
-                        if summary.startswith("No text could be extracted"):
-                            st.warning(summary)
-                            st.session_state.file_processed = False
-                            st.session_state.summary = None
-                            st.session_state.questions = None
-                            st.session_state.scroll_to_summary = False
-                        else:
-                            # Store results in session state
-                            st.session_state.summary = summary
-                            st.session_state.file_processed = True
-                            st.session_state.scroll_to_summary = True
-                            
-                            # Warn if summary is shorter than expected
-                            summary_words = len(nltk.word_tokenize(summary))
-                            if summary_words < min_length:
-                                st.warning(
-                                    f"Generated summary is shorter than the minimum length ({summary_words} words < {min_length} words). "
-                                    "The input document may be too short. Consider uploading a longer document or adjusting the summary length settings."
-                                )
-
-                            if generate_quiz:
-                                # Check summary length for quiz generation
-                                sentences = nltk.sent_tokenize(summary)
-                                words = nltk.word_tokenize(summary)
-                                if len(sentences) < 1 or len(words) < 10:
-                                    st.warning(
-                                        "Cannot generate quiz questions: Summary is too short "
-                                        f"({len(sentences)} sentences, {len(words)} words). "
-                                        "Please upload a longer document or increase the summary length."
-                                    )
-                                    st.session_state.questions = None
-                                else:
-                                    questions = generate_questions(summary, num_questions)
-                                    if not questions:
-                                        st.warning(
-                                            "Failed to generate quiz questions. "
-                                            "The summary may lack sufficient keywords or varied sentences to create questions with distractors. "
-                                            "Try increasing the summary length or uploading a more detailed document."
-                                        )
-                                        st.session_state.questions = None
-                                    else:
-                                        st.session_state.questions = questions
-                                        if len(questions) < num_questions:
-                                            st.info(
-                                                f"Generated only {len(questions)} out of {num_questions} requested questions "
-                                                "due to limited keywords or distractors in the summary."
-                                            )
-                            else:
-                                st.session_state.questions = None
-                        
-                    except Exception as e:
-                        st.error(f"Error processing file: {str(e)}")
-                    finally:
-                        # Clean up the uploaded file
-                        if os.path.exists(file_path):
-                            os.remove(file_path)
-
-    # Display results if file has been processed
-    if st.session_state.file_processed and st.session_state.summary:
-        # Add unique ID to summary header for scrolling
-        st.markdown('<h2 id="generated-summary">Generated Summary</h2>', unsafe_allow_html=True)
-        st.write(st.session_state.summary)
-        
-        # Auto-scroll to summary section with improved reliability
-        if st.session_state.scroll_to_summary:
-            st.markdown(
-                """
-                <script>
-                document.addEventListener('DOMContentLoaded', function() {
-                    setTimeout(function() {
-                        const element = document.getElementById('generated-summary');
-                        if (element) {
-                            element.scrollIntoView({behavior: 'smooth', block: 'start'});
-                        }
-                    }, 100);
-                });
-                </script>
-                """,
-                unsafe_allow_html=True
-            )
-            # Reset scroll flag to prevent repeated scrolling
-            st.session_state.scroll_to_summary = False
-        
-        # Download summary PDF button
-        if st.button("Download Summary PDF"):
-            try:
-                pdf_path = export_summary_to_pdf(st.session_state.summary)
-                with open(pdf_path, "rb") as f:
-                    st.download_button(
-                        label="Click here to download Summary PDF",
-                        data=f,
-                        file_name="summary_output.pdf",
-                        mime="application/pdf",
-                        key="summary_download"
-                    )
-            except Exception as e:
-                st.error(f"Error generating summary PDF: {str(e)}")
-        
-        # Display quiz if generated
-        if st.session_state.questions:
-            st.subheader("Quiz Questions")
-            quiz_col1, quiz_col2 = st.columns([3, 1])
+        with summary_tab:
+            st.markdown("### Document Summary")
+            st.text_area("Summary", value=st.session_state.summary, height=300, key="summary_display")
             
-            with quiz_col1:
-                for i, q in enumerate(st.session_state.questions, 1):
-                    st.markdown(f"**Question {i}**")
-                    st.write(q["question"])
-                    
-                    # Display options
-                    options = q["options"]
-                    random.shuffle(options)
-                    for j, option in enumerate(options, 1):
-                        st.write(f"{j}. {option}")
-                    
-                    # Show answer in a collapsible section
-                    with st.expander("Show Answer"):
-                        st.write(f"Correct Answer: {q['answer']}")
-                    
-                    st.markdown("---")
-            
-            with quiz_col2:
-                st.markdown("### Download Options")
-                if st.button("Download Quiz PDF", key="quiz_download_button"):
+            # Export options
+            st.markdown("### Export Options")
+            col1, col2 = st.columns(2)
+            with col1:
+                if st.button("📄 Export Summary as PDF"):
                     try:
-                        quiz_pdf_path = export_quiz_to_pdf(st.session_state.questions)
-                        with open(quiz_pdf_path, "rb") as f:
+                        pdf_path = export_summary_to_pdf(st.session_state.summary)
+                        with open(pdf_path, "rb") as f:
                             st.download_button(
-                                label="Click here to download Quiz PDF",
+                                label="Download Summary PDF",
                                 data=f,
-                                file_name="quiz_output.pdf",
-                                mime="application/pdf",
-                                key="quiz_download"
+                                file_name="study_sage_summary.pdf",
+                                mime="application/pdf"
                             )
+                        st.success("✅ Summary PDF exported!")
                     except Exception as e:
-                        st.error(f"Error generating quiz PDF: {str(e)}")
-                        
-    # Footer
-    st.markdown("""
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
-    <style>
-        .footer {
-            margin-top: 50px;
-            padding: 20px;
-            text-align: center;
-            border-top: 1px solid #eee;
-        }
-        .social-icons a {
-            margin: 0 10px;
-            color: #333;
-            font-size: 20px;
-        }
-    </style>
-    <div class="footer">
-        <div class="social-icons">
-            <a href="https://github.com/Sahaj33-op/" target="_blank"><i class="fab fa-github"></i></a>
-        </div>
-        <p>© 2025 StudySage. All rights reserved.</p>
-        <p><a href="https://linktr.ee/sahaj33" style="color: #333; text-decoration: none;">Contact Me</a></p>
-    </div>
-    """, unsafe_allow_html=True)
+                        st.error(f"❌ Error exporting PDF: {str(e)}")
+            
+            with col2:
+                if st.button("💾 Save Summary as Text"):
+                    st.download_button(
+                        label="Download Summary Text",
+                        data=st.session_state.summary,
+                        file_name="study_sage_summary.txt",
+                        mime="text/plain"
+                    )
+        
+        with quiz_tab:
+            st.markdown("### Generate Quiz")
+            num_questions = st.slider("Number of Questions", min_value=1, max_value=20, value=5)
+            
+            if st.button("🧪 Generate Quiz Questions"):
+                try:
+                    with st.spinner("Generating quiz..."):
+                        questions = generate_questions(st.session_state.summary, num_questions)
+                        st.session_state.questions = questions
+                        st.success("✅ Quiz generated successfully!")
+                except Exception as e:
+                    st.error(f"❌ Error generating quiz: {str(e)}")
+            
+            # Display questions if generated
+            if st.session_state.questions:
+                st.markdown("### Quiz Questions")
+                for i, q in enumerate(st.session_state.questions, 1):
+                    st.markdown(f"**Question {i}:** {q['question']}")
+                    st.markdown("**Options:**")
+                    for j, option in enumerate(q['options'], 1):
+                        st.markdown(f"{j}. {option}")
+                    st.markdown(f"**Answer:** {q['answer']}")
+                    st.markdown("---")
+                
+                # Quiz export options
+                st.markdown("### Export Quiz")
+                if st.button("📄 Export Quiz as PDF"):
+                    try:
+                        pdf_path = export_quiz_to_pdf(st.session_state.questions)
+                        with open(pdf_path, "rb") as f:
+                            st.download_button(
+                                label="Download Quiz PDF",
+                                data=f,
+                                file_name="study_sage_quiz.pdf",
+                                mime="application/pdf"
+                            )
+                        st.success("✅ Quiz PDF exported!")
+                    except Exception as e:
+                        st.error(f"❌ Error exporting quiz PDF: {str(e)}")
 
-if __name__ == "__main__":
-    main()
-
+# Footer
+st.markdown("---")
+st.markdown("🧠 StudySage - AI-Powered Study Assistant")

@@ -7,9 +7,9 @@ if str(ROOT) not in sys.path:
     sys.path.append(str(ROOT))
 
 import os
-from transformers import pipeline, AutoTokenizer, AutoModelForSeq2SeqLM
+import platform
 from pathlib import Path
-from core.summarize import summarize_text
+from core.summarize import summarize_text, get_model_path
 from core.quiz_gen import generate_questions
 from core.export_pdf import export_summary_to_pdf, export_quiz_to_pdf
 from core.ocr_reader import extract_text_from_image
@@ -20,27 +20,31 @@ from datetime import datetime
 import requests
 import json
 import torch
-import re
-import platform
-from PIL import Image
-import fitz  # PyMuPDF
 import logging
+
+# Import configuration from the new config module
+try:
+    from config import (
+        ONLINE_MODE_MAX_CHARS, ONLINE_MODE_MAX_WORDS,
+        OFFLINE_MODE_MAX_CHARS, OFFLINE_MODE_MAX_WORDS,
+        OUTPUT_DIR
+    )
+except ImportError:
+    # Fallback if config.py doesn't exist yet
+    ONLINE_MODE_MAX_CHARS = 4000
+    ONLINE_MODE_MAX_WORDS = 800
+    OFFLINE_MODE_MAX_CHARS = 100000
+    OFFLINE_MODE_MAX_WORDS = 20000
+    OUTPUT_DIR = "output"
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-OUTPUT_DIR = Path("output")
+OUTPUT_PATH = Path(OUTPUT_DIR)
+OUTPUT_PATH.mkdir(exist_ok=True)
 MODELS_DIR = Path("models")
-OUTPUT_DIR.mkdir(exist_ok=True)
 MODELS_DIR.mkdir(exist_ok=True)
-
-
-# Constants for mode limits
-ONLINE_MODE_MAX_CHARS = 4000
-ONLINE_MODE_MAX_WORDS = 800
-OFFLINE_MODE_MAX_CHARS = 100000
-OFFLINE_MODE_MAX_WORDS = 20000
 
 init(autoreset=True)
 
@@ -55,25 +59,6 @@ def load_config():
 def save_config(config):
     with open(CONFIG_FILE, 'w') as f:
         json.dump(config, f, indent=4)
-
-def download_model():
-    print(Fore.BLUE + "[+] Downloading model...")
-    model_name = "sshleifer/distilbart-cnn-12-6"
-    tokenizer = AutoTokenizer.from_pretrained(model_name)
-    model = AutoModelForSeq2SeqLM.from_pretrained(model_name)
-    
-    model_path = MODELS_DIR / model_name.split('/')[-1]
-    tokenizer.save_pretrained(model_path)
-    model.save_pretrained(model_path)
-    print(Fore.GREEN + "[+] Model downloaded.")
-    return model_path
-
-def get_model_path():
-    model_name = "sshleifer/distilbart-cnn-12-6"
-    model_path = MODELS_DIR / model_name.split('/')[-1]
-    if not model_path.exists():
-        return download_model()
-    return model_path
 
 def clear_terminal():
     if platform.system() == "Windows":
@@ -98,85 +83,6 @@ def print_mode_banner(mode):
     print(mode_color + "=" * 50 + "\n")
     print(Fore.YELLOW + "🧠 StudySage – AI Note Assistant by Sahaj33\n")
 
-def load_text_from_file(file_path: str, lang: str = 'eng') -> str:
-    _, ext = os.path.splitext(file_path)
-    ext = ext.lower()
-
-    logger.info(f"Processing file: {file_path} (extension: {ext})")
-    
-    try:
-        if ext in ['.txt', '.md', '.py', '.json', '.csv']:
-            with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
-                text = f.read()
-            logger.info(f"Text file extracted: {len(text)} characters")
-            return text
-
-        elif ext == '.pdf':
-            text = ""
-            try:
-                doc = fitz.open(file_path)
-                logger.info(f"PDF opened with {len(doc)} pages")
-                for page_num in range(len(doc)):
-                    page = doc.load_page(page_num)
-                    # First, try to extract text directly
-                    page_text = page.get_text("text")
-                    if page_text.strip():
-                        text += page_text + "\n"
-                        logger.info(f"Page {page_num + 1}: Extracted text directly ({len(page_text)} characters)")
-                    else:
-                        logger.info(f"Page {page_num + 1}: No text extracted directly, falling back to OCR")
-                        # Fallback to OCR if no text is extracted
-                        pix = page.get_pixmap(dpi=300)
-                        img_path = os.path.join("output", f"temp_page_{page_num}.png")
-                        pix.save(img_path)
-                        ocr_text = extract_text_from_image(img_path, lang)
-                        if ocr_text and ocr_text.strip():
-                            text += ocr_text + "\n"
-                            logger.info(f"Page {page_num + 1}: OCR extracted {len(ocr_text)} characters")
-                        else:
-                            logger.warning(f"Page {page_num + 1}: OCR extracted no text")
-                        os.remove(img_path)
-                doc.close()
-            except Exception as e:
-                logger.error(f"Error extracting text from PDF: {str(e)}")
-                raise Exception(f"Error extracting text from PDF: {str(e)}")
-            final_text = text.strip()
-            logger.info(f"Final PDF text: {len(final_text)} characters")
-            return final_text
-
-        elif ext in ['.png', '.jpg', '.jpeg', '.bmp', '.tiff']:
-            ocr_text = extract_text_from_image(file_path, lang)
-            logger.info(f"Image OCR extracted: {len(ocr_text)} characters")
-            return ocr_text
-
-        else:
-            logger.error(f"Unsupported file format: {ext}")
-            raise ValueError(f"Unsupported file format: {ext}")
-    except Exception as e:
-        logger.error(f"Error loading file: {str(e)}")
-        raise Exception(f"Error loading file: {str(e)}")
-
-def chunk_text(text, max_length=1024):
-    sentences = re.split(r'(?<=[.!?])\s+', text)
-    chunks = []
-    current_chunk = []
-    current_length = 0
-    
-    for sentence in sentences:
-        sentence_length = len(sentence.split())
-        if current_length + sentence_length > max_length and current_chunk:
-            chunks.append(' '.join(current_chunk))
-            current_chunk = [sentence]
-            current_length = sentence_length
-        else:
-            current_chunk.append(sentence)
-            current_length += sentence_length
-    
-    if current_chunk:
-        chunks.append(' '.join(current_chunk))
-    
-    return chunks
-
 def count_words(text):
     return len(text.split())
 
@@ -195,61 +101,6 @@ def check_text_limits(text, mode):
             return False, f"Text exceeds offline mode limits (max {OFFLINE_MODE_MAX_WORDS} words or {OFFLINE_MODE_MAX_CHARS} chars)."
     
     return True, ""
-
-def summarize_text(text, min_len, max_len, config, cli_mode=True):
-    within_limits, limit_message = check_text_limits(text, config["mode"])
-    if not within_limits:
-        if config["mode"] == "online":
-            if cli_mode:
-                print(Fore.YELLOW + f"\n[!] {limit_message}")
-                print(Fore.YELLOW + "Switching to offline mode...")
-            config["mode"] = "offline"
-            if not (MODELS_DIR / "distilbart-cnn-12-6").exists():
-                if cli_mode:
-                    download_model()
-                else:
-                    raise ValueError("Offline model not available. Please download the model or use online mode.")
-        else:
-            raise ValueError(limit_message)
-
-    if config["mode"] == "offline":
-        if cli_mode:
-            print(Fore.BLUE + "[+] Using offline model...")
-        model_path = get_model_path()
-        summarizer = pipeline("summarization", model=str(model_path))
-        chunks = chunk_text(text)
-        summaries = []
-        for chunk in chunks:
-            summary = summarizer(chunk, max_length=max_len, min_length=min_len, do_sample=False)
-            summaries.append(summary[0]['summary_text'])
-        return " ".join(summaries)
-    else:
-        if cli_mode:
-            print(Fore.BLUE + "[+] Using online API...")
-        if not config["api_key"]:
-            raise ValueError("API key not set for online mode.")
-        
-        headers = {"Authorization": f"Bearer {config['api_key']}"}
-        API_URL = "https://api-inference.huggingface.co/models/sshleifer/distilbart-cnn-12-6"
-        
-        chunks = chunk_text(text)
-        summaries = []
-        for chunk in chunks:
-            response = requests.post(API_URL, headers=headers, json={
-                "inputs": chunk,
-                "parameters": {
-                    "max_length": max_len,
-                    "min_length": min_len,
-                    "do_sample": False
-                }
-            })
-            
-            if response.status_code != 200:
-                raise Exception(f"API request failed: {response.text}")
-            
-            summaries.append(response.json()[0]['summary_text'])
-        
-        return " ".join(summaries)
 
 def display_results(summary, questions=None):
     clear_terminal()
@@ -342,7 +193,7 @@ def process_file(file_path, mode="online", api_key=None, min_length=30, max_leng
     text = load_text_from_file(file_path, lang=lang)
     if not text:
         return "No text could be extracted from the file. The file may be empty, contain no recognizable text, or OCR may have failed."
-    summary = summarize_text(text, min_length, max_length, config, cli_mode=False)
+    summary = summarize_text(text, min_length, max_length, config)
     return summary
 
 def main():
@@ -407,13 +258,16 @@ def main():
         
         try:
             if feature_choice == "1":
-                last_summary, last_questions = run_features("1", last_text, min_len, max_len, config)
+                result = run_features("1", last_text, min_len, max_len, config)
+                last_summary, last_questions = result if result else (None, None)
                 quiz_choice = input(Fore.CYAN + "\nGenerate quiz questions? (y/n): ").strip().lower()
                 if quiz_choice == 'y':
-                    last_summary, last_questions = run_features("2", last_text, min_len, max_len, config, last_summary)
+                    result = run_features("2", last_text, min_len, max_len, config, last_summary)
+                    last_summary, last_questions = result if result else (None, None)
             
             elif feature_choice == "2":
-                last_summary, last_questions = run_features("2", last_text, min_len, max_len, config, last_summary)
+                result = run_features("2", last_text, min_len, max_len, config, last_summary)
+                last_summary, last_questions = result if result else (None, None)
             
             elif feature_choice == "3":
                 last_file_path = None

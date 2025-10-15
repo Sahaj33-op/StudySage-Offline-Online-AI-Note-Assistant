@@ -8,18 +8,25 @@ from typing import Callable, Optional, Dict, List
 
 from transformers import pipeline, AutoTokenizer, AutoModelForSeq2SeqLM
 
+# Import configuration from the centralized config module
+try:
+    from config import (
+        MODEL_NAME, ONLINE_MODE_MAX_CHARS, ONLINE_MODE_MAX_WORDS,
+        OFFLINE_MODE_MAX_CHARS, OFFLINE_MODE_MAX_WORDS
+    )
+except ImportError:
+    # Fallback configuration if config.py doesn't exist
+    MODEL_NAME = "sshleifer/distilbart-cnn-12-6"
+    ONLINE_MODE_MAX_CHARS = 4000
+    ONLINE_MODE_MAX_WORDS = 800
+    OFFLINE_MODE_MAX_CHARS = 100000
+    OFFLINE_MODE_MAX_WORDS = 20000
+
 # ---------- constants & dirs ----------
 MODELS_DIR = Path("models")
 MODELS_DIR.mkdir(exist_ok=True)
 
-MODEL_NAME = "sshleifer/distilbart-cnn-12-6"
 LOCAL_MODEL_DIR = MODELS_DIR / "distilbart-cnn-12-6"
-
-# Soft limits (keep generous offline; tighter online)
-ONLINE_MODE_MAX_CHARS = 4000
-ONLINE_MODE_MAX_WORDS = 800
-OFFLINE_MODE_MAX_CHARS = 100000
-OFFLINE_MODE_MAX_WORDS = 20000
 
 Progress = Optional[Callable[[str, int, int], None]]
 

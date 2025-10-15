@@ -36,7 +36,10 @@ def _keywords(text: str, k: int = 10):
 def generate_questions(summary: str, num_questions: int = 5):
     """
     Returns a list of {question, options[list], answer}.
-    Simple keyword & sentence-based MCQs; deterministic but decent for study sets.
+    Simple keyword & sentence-based MCQs; now uses global random for non-deterministic results.
+    
+    Note: For more advanced, non-deterministic question generation, exploring a dedicated 
+    Question Generation model (like a T5-based model) would be the next step.
     """
     sents = [s.strip() for s in sent_tokenize(summary) if s.strip()]
     if not sents:
@@ -44,7 +47,6 @@ def generate_questions(summary: str, num_questions: int = 5):
 
     keys = _keywords(summary, k=min(12, max(6, num_questions * 3)))
     qs = []
-    rng = random.Random(1337)  # stable order for tests
 
     for i in range(min(num_questions, len(sents))):
         sent = sents[i % len(sents)]
@@ -54,9 +56,9 @@ def generate_questions(summary: str, num_questions: int = 5):
 
         # distractors
         distractors = [k for k in keys if k != target]
-        rng.shuffle(distractors)
+        random.shuffle(distractors)  # Use global random module instead of fixed seed
         options = [target] + distractors[:3]
-        rng.shuffle(options)
+        random.shuffle(options)  # Use global random module instead of fixed seed
 
         qs.append({
             "question": q,
