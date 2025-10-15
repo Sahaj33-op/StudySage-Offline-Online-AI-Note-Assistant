@@ -47,6 +47,7 @@ StudySage/
 │     ├─ telegram\_bot.py
 │     ├─ bot\_config.sample.json
 │     └─ requirements.txt
+├─ config.py                 # Centralized configuration
 ├─ models/                   # auto-downloaded (gitignored)
 ├─ output/                   # generated files (gitignored)
 ├─ requirements.txt          # core + web/gui/cli deps
@@ -153,3 +154,4 @@ pytest
 ## 🪪 License
 
 - MIT — see [LICENSE](LICENSE).
+
