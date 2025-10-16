@@ -39,7 +39,7 @@ OUTPUT_PATH.mkdir(exist_ok=True)
 # Create header with logo and text
 col1, col2 = st.columns([1, 2])
 with col1:
-    logo_path = "assets\\images\\logo.png"
+    logo_path = "assets/images/logo.png"
     if os.path.exists(logo_path):
         st.image(logo_path, width=200, use_container_width=False)
     else:
@@ -186,3 +186,4 @@ if uploaded_file is not None:
 st.markdown("---")
 
 st.markdown("🧠 StudySage - AI-Powered Study Assistant")
+
