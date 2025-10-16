@@ -1,3 +1,10 @@
+import sys
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[2]
+if str(ROOT) not in sys.path:
+    sys.path.append(str(ROOT))
+
 import streamlit as st
 import os
 import tempfile
@@ -177,4 +184,5 @@ if uploaded_file is not None:
 
 # Footer
 st.markdown("---")
+
 st.markdown("🧠 StudySage - AI-Powered Study Assistant")
